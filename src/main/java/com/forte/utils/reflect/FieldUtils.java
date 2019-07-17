@@ -224,7 +224,14 @@ public class FieldUtils {
     public static List<Field> getFieldsWithGetter(Class<?> tClass) {
         Field[] fs = tClass.getDeclaredFields();
         //返回时过滤掉没有get方法的字段
-        return Arrays.stream(fs).filter(f -> Arrays.stream(tClass.getMethods()).anyMatch(m -> m.getName().equals("get" + headUpper(f.getName())))).collect(Collectors.toList());
+        return Arrays.stream(fs).filter(f -> Arrays.stream(tClass.getMethods()).anyMatch(m -> {
+            Class<?> returnType = m.getReturnType();
+            if(returnType.equals(Boolean.class) || returnType.equals(boolean.class)){
+                return m.getName().equals("is" + headUpper(f.getName()));
+            }else{
+                return m.getName().equals("get" + headUpper(f.getName()));
+            }
+        })).collect(Collectors.toList());
     }
 
     /**
@@ -315,17 +322,51 @@ public class FieldUtils {
             return cacheGetter;
         }
 
-        //获取getter方法
+        //查询缓存中是否存在此字段
+        CacheField cacheField = getCacheField(whereIn, fieldName);
+        if(cacheField != null){
+            return cacheField.getGetter();
+        }
+
+        //否则，先查询此字段
+        Field declaredField;
         try {
-            Method getter = whereIn.getMethod("get" + headUpper(fieldName));
-            //计入缓存
-            saveSingleCacheFieldGetter(whereIn, fieldName, getter);
-            //返回结果
-            return getter;
-        } catch (NoSuchMethodException e) {
-            //如果出现异常，返回null
+            declaredField = whereIn.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException e) {
             return null;
         }
+
+        //将字段计入缓存
+        saveSingleCacheField(whereIn, declaredField);
+
+        //获取字段类型
+        Class<?> type = declaredField.getType();
+
+        //getter方法
+        Method getter;
+
+        //如果是boolean类型，用is查询
+        if(type.equals(Boolean.class) || type.equals(boolean.class)){
+            //获取getter方法
+            try {
+                getter = whereIn.getMethod("is" + headUpper(fieldName));
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+
+        }else{
+            //获取getter方法
+            try {
+                getter = whereIn.getMethod("get" + headUpper(fieldName));
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+        }
+
+        //计入缓存
+        saveSingleCacheFieldGetter(whereIn, fieldName, getter);
+        //返回结果
+        return getter;
     }
 
     /**
@@ -1296,13 +1337,25 @@ public class FieldUtils {
     public static String getMethodNameWithoutGetter(Method method) {
         //获取方法名
         String name = method.getName();
-        //判断是否为get开头且去掉get之后首字母大写
-        if (name.startsWith("get") && Character.isUpperCase(name.substring(3).charAt(0))) {
-            //如果是，去掉get并开头小写
-            return headLower(name.substring(3));
-        } else {
-            //否则原样返回
-            return name;
+        Class<?> returnType = method.getReturnType();
+        if(returnType.equals(Boolean.class) || returnType.equals(boolean.class)){
+            //判断是否为is开头且去掉is之后首字母大写
+            if (name.startsWith("is") && Character.isUpperCase(name.substring(3).charAt(0))) {
+                //如果是，去掉get并开头小写
+                return headLower(name.substring(3));
+            } else {
+                //否则原样返回
+                return name;
+            }
+        }else{
+            //判断是否为get开头且去掉get之后首字母大写
+            if (name.startsWith("get") && Character.isUpperCase(name.substring(3).charAt(0))) {
+                //如果是，去掉get并开头小写
+                return headLower(name.substring(3));
+            } else {
+                //否则原样返回
+                return name;
+            }
         }
     }
 
@@ -1336,13 +1389,27 @@ public class FieldUtils {
     public static String getMethodNameWithoutGetterAndSetter(Method method) {
         //获取方法名
         String name = method.getName();
-        //判断是否为get开头且去掉get之后首字母大写
-        if ((name.startsWith("get") || name.startsWith("set")) && Character.isUpperCase(name.substring(3).charAt(0))) {
-            //如果是，去掉get并开头小写
-            return headLower(name.substring(3));
-        } else {
-            //否则原样返回
-            return name;
+        Class<?> returnType = method.getReturnType();
+        if(returnType.equals(Boolean.class) || returnType.equals(boolean.class)){
+            //判断是否为is开头且去掉is之后首字母大写
+            if ((name.startsWith("is") || name.startsWith("set")) && Character.isUpperCase(name.substring(3).charAt(0))) {
+                //如果是，去掉get并开头小写
+                return headLower(name.substring(3));
+            } else {
+                //否则原样返回
+                return name;
+            }
+
+        }else{
+            //判断是否为get开头且去掉get之后首字母大写
+            if ((name.startsWith("get") || name.startsWith("set")) && Character.isUpperCase(name.substring(3).charAt(0))) {
+                //如果是，去掉get并开头小写
+                return headLower(name.substring(3));
+            } else {
+                //否则原样返回
+                return name;
+            }
+
         }
     }
 

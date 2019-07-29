@@ -9,6 +9,6 @@ package com.forte.utils.thread.threadutil.inter.parallel;
 public interface ParallelTaskFunc {
 
     /** 需要并行的任务 */
-    public void parallel();
+    void parallel();
 
 }

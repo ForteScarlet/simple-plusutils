@@ -94,10 +94,20 @@ public class ParallelTask implements Runnable {
         return start;
     }
 
+    /**
+     * 获取任务名称
+     * @return
+     */
     public String getTaskName(){
         return this.taskName;
     }
 
+    /**
+     * 移除LocalThread的值
+     */
+    public static void removeCount(){
+        nameCount.remove();
+    }
 
 
 

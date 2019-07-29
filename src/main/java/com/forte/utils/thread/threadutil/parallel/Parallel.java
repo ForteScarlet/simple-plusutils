@@ -48,7 +48,7 @@ public abstract class Parallel {
 
 
     /** 全局监听器 */
-    private ParallelGlobalListener listener = ParallelUtil.listener;
+    private static ParallelGlobalListener listener = ParallelUtil.listener;
 
     /**
      * 线程池的名称

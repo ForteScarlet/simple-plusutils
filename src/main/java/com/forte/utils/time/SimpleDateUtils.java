@@ -2,7 +2,10 @@ package com.forte.utils.time;
 
 
 import java.time.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +28,7 @@ public class SimpleDateUtils {
     }};
 
     /**
-     * 获取向后推n个月的每个月的月初日期
+     * 获取向前推n个月的每个月的月初日期
      * 返回值为yyyy-MM-dd
      * 例如：假如今天是2019-4-30，则lastMonthByDay(3,true)返回值就是：
      * [
@@ -63,7 +66,7 @@ public class SimpleDateUtils {
    }
 
     /**
-     * 获取向后推n个月的每个月的月初日期
+     * 获取向前推n个月的每个月的月初日期
      * 返回值为yyyy-MM
      * 例如：假如今天是2019-4-30，则lastMonthByMonth(3,true)返回值就是：
      * [
@@ -173,17 +176,23 @@ public class SimpleDateUtils {
      */
     public static String toChineseWeekDay(DayOfWeek dayOfWeek){
         int dayOfWeekValue = dayOfWeek.getValue();
-        switch (dayOfWeekValue){
-            case 1 :
-            case 2 :
-            case 3 :
-            case 4 :
-            case 5 :
-            case 6 :
-            case 7 : return DAY_OF_WEEK_CHINESE_MAP.get(dayOfWeekValue);
-            default: return "未知";
-        }
+        return DAY_OF_WEEK_CHINESE_MAP.getOrDefault(dayOfWeekValue, "未知日");
     }
+
+    /**
+     * 将DayOfWeek转化为中文的星期字符串
+     */
+    public static String toChineseWeekDay(){
+        return toChineseWeekDay(LocalDate.now().getDayOfWeek());
+    }
+
+    /**
+     * 复制一个{@link #DAY_OF_WEEK_CHINESE_MAP}字段
+     */
+    public static Map<Integer, String> getDayOfWeekChineseMap(){
+        return DAY_OF_WEEK_CHINESE_MAP.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
 
     /**
      * 获取星期对应中文字符串数组
@@ -191,6 +200,7 @@ public class SimpleDateUtils {
     public static String[] getDayOfWeekChineseStr(){
         return DAY_OF_WEEK_CHINESE_MAP.values().toArray(new String[0]);
     }
+
 
     /** 获取某年所有月份 -yyyy-MM */
     public static List<YearMonth> getAllYearMonth(Year year){

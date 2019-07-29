@@ -70,11 +70,11 @@ public class DateDifferenceUtils {
      */
     public static class DateDiff {
         private long difference;
-        private long day = 0;
-        private long hour = 0;
-        private long minute = 0;
-        private long second = 0;
-        private long millisecond = 0;
+        private long day;
+        private long hour;
+        private long minute;
+        private long second;
+        private long millisecond;
 
         /* —————— getter —————— */
 

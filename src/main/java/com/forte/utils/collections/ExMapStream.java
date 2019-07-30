@@ -1,269 +1,75 @@
 package com.forte.utils.collections;
 
+import java.lang.reflect.Array;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.*;
 import java.util.stream.*;
 
 /**
- * 流拓展, 内部存在一个stream对象，此类基本上仅作为简化部分繁琐的步骤
- *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/
-public class ExStream<T> implements Stream<T> {
-
-    /**
-     * 内部流对象
-     */
-    protected final Stream<T> stream;
+public class ExMapStream<K, V> extends ExStream<Map.Entry<K, V>> {
 
     /**
      * 构造，以指定内部流对象
+     *
+     * @param stream
      */
-    public ExStream(Stream<T> stream) {
-        this.stream = stream;
-    }
-
-    //**************** 工厂方法 ****************//
-
-    /**
-     * of
-     */
-    public static <T> ExStream<T> of(T t) {
-        return new ExStream<>(Stream.of(t));
+    public ExMapStream(Stream<Map.Entry<K, V>> stream) {
+        super(stream);
     }
 
 
-    /**
-     * of
-     */
-    public static <T> ExStream<T> of(T... ts) {
-        return new ExStream<>(Stream.of(ts));
-    }
-
-    /**
-     * of
-     */
-    public static <T> ExStream<T> of(Stream<T> stream){
-        return new ExStream<>(stream);
-    }
-
-    /**
-     * of
-     */
-    public static <T> ExStream<T> of(Collection<T> collection){
-        return new ExStream<>(collection.stream());
-    }
-
-    /**
-     * of
-     */
-    public static <K, V> ExMapStream<K, V> of(Map<K, V> map){
-        return new ExMapStream<>(map.entrySet().stream());
+    public static <K, V> ExMapStream<K, V> ofStream(Stream<Map.Entry<K, V>> stream){
+        return new ExMapStream<>(stream);
     }
 
 
     /**
-     * iterate
+     * 转化为Map
      */
-    public static <T> ExStream<T> iterate(final T seed, final UnaryOperator<T> f) {
-        return new ExStream<>(Stream.iterate(seed, f));
-    }
-
-    /**
-     * concat
-     */
-    public static <T> ExStream<T> concat(Stream<? extends T> a, Stream<? extends T> b) {
-        return new ExStream<>(Stream.concat(a, b));
-    }
-
-    /**
-     * empty
-     */
-    public static <T> ExStream<T> empty() {
-        return new ExStream<>(Stream.empty());
-    }
-
-    /**
-     * generate
-     */
-    public static <T> ExStream<T> generate(Supplier<T> s) {
-        return new ExStream<>(Stream.generate(s));
-    }
-
-
-    //**************** 简化用的方法 ****************//
-
-    /**
-     * 转为list
-     */
-    public List<T> toList() {
-        return stream.collect(Collectors.toList());
-    }
-
-    /**
-     * 转化为set
-     */
-    public Set<T> toSet() {
-        return stream.collect(Collectors.toSet());
+    public Map<K, V> toMap() {
+        return toMap(defaultKeyMapper(), defaultValueMapper());
     }
 
     /**
      * 转化为Map
      */
-    public <K, V> Map<K, V> toMap(Function<? super T, ? extends K> keyMapper,
-                                  Function<? super T, ? extends V> valueMapper) {
-        return stream.collect(Collectors.toMap(keyMapper, valueMapper));
+    public <M extends Map<K, V>> Map<K, V> toMap(Supplier<M> mapSupplier){
+        return toMap(defaultKeyMapper(), defaultValueMapper(), throwingMerger(), mapSupplier);
     }
 
     /**
      * 转化为Map
      */
-    public <K, V> Map<K, V> toMap(Function<? super T, ? extends K> keyMapper,
-                                  Function<? super T, ? extends V> valueMapper,
-                                  BinaryOperator<V> mergeFunction) {
-        return stream.collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction));
+    public <M extends Map<K, V>> Map<K, V> toMap(BinaryOperator<V> mergeFunction, Supplier<M> mapSupplier){
+        return toMap(defaultKeyMapper(), defaultValueMapper(), mergeFunction, mapSupplier);
     }
 
     /**
-     * 转化为Map，如果出现键冲突则直接使用原版Stream的异常方法
-     * @param keyMapper
-     * @param valueMapper
-     * @param mapSupplier
-     * @param <K>
-     * @param <V>
-     * @param <M>
-     * @return
+     * 转化为顺序map
      */
-    public <K, V, M extends Map<K, V>> Map<K, V> toMap(Function<? super T, ? extends K> keyMapper,
-                                                       Function<? super T, ? extends V> valueMapper,
-                                                       Supplier<M> mapSupplier){
-        return stream.collect(Collectors.toMap(keyMapper, valueMapper, throwingMerger(), mapSupplier));
+    public Map<K, V> toLinkedMap(){
+        return toMap(LinkedHashMap::new);
     }
 
     /**
-     * 转化为Map
+     * 转化为顺序map
      */
-    public <K, U, M extends Map<K, U>>
-    M toMap(Function<? super T, ? extends K> keyMapper,
-            Function<? super T, ? extends U> valueMapper,
-            BinaryOperator<U> mergeFunction,
-            Supplier<M> mapSupplier) {
-        return stream.collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction, mapSupplier));
+    public Map<K, V> toLinkedMap(BinaryOperator<V> mergeFunction){
+        return toMap(mergeFunction, LinkedHashMap::new);
     }
 
 
-    /**
-     * 转化后toList
-     */
-    public <R> List<R> toList(Function<T, R> mapper) {
-        return stream.map(mapper).collect(Collectors.toList());
+    private Function<? super Map.Entry<K, V>, ? extends K> defaultKeyMapper(){
+        return Map.Entry::getKey;
     }
 
-    /**
-     * 转化后排序后toList
-     */
-    public <R> List<R> toListSorted(Function<T, R> mapper) {
-        return stream.map(mapper).sorted().collect(Collectors.toList());
+    private Function<? super Map.Entry<K, V>, ? extends V> defaultValueMapper(){
+        return Map.Entry::getValue;
     }
 
-    /**
-     * 排序后转化后tolist
-     */
-    public <R> List<R> sortedToList(Function<T, R> mapper) {
-        return stream.sorted().map(mapper).collect(Collectors.toList());
-    }
-
-    /**
-     * 转化后排序后toList
-     */
-    public <R> List<R> toListSorted(Function<T, R> mapper, Comparator<R> comparator) {
-        return stream.map(mapper).sorted(comparator).collect(Collectors.toList());
-    }
-
-    /**
-     * 排序后转化后tolist
-     */
-    public <R> List<R> sortedToList(Function<T, R> mapper, Comparator<T> comparator) {
-        return stream.sorted(comparator).map(mapper).collect(Collectors.toList());
-    }
-
-    /**
-     * joining
-     */
-    public String joining(Function<T, String> mapper) {
-        return stream.map(mapper).collect(Collectors.joining());
-    }
-
-    /**
-     * joining
-     */
-    public String joining(Function<T, String> mapper, CharSequence delimiter) {
-        return stream.map(mapper).collect(Collectors.joining(delimiter));
-    }
-
-    /**
-     * joining
-     */
-    public String joining(Function<T, String> mapper,
-                          CharSequence delimiter,
-                          CharSequence prefix,
-                          CharSequence suffix) {
-        return stream.map(mapper).collect(Collectors.joining(delimiter, prefix, suffix));
-    }
-
-    /**
-     * groupBy
-     */
-    public <K> Map<? extends K, List<T>> groupBy(Function<? super T, ? extends K> classifier) {
-        return stream.collect(Collectors.groupingBy(classifier));
-    }
-
-    /**
-     * groupBy
-     */
-    public <K, A, D> Map<? extends K, D> groupBy(Function<? super T, ? extends K> classifier,
-                                                 Collector<? super T, A, D> downstream) {
-        return stream.collect(Collectors.groupingBy(classifier, downstream));
-    }
-
-    /**
-     * groupBy
-     */
-    public <K, A, D, M extends Map<K, D>> M groupBy(Function<? super T, ? extends K> classifier,
-                                                    Supplier<M> mapFactory,
-                                                    Collector<? super T, A, D> downstream) {
-        return stream.collect(Collectors.groupingBy(classifier, mapFactory, downstream));
-    }
-
-    /**
-     * groupByConcurrent
-     */
-    public <K> Map<? extends K, List<T>> groupByConcurrent(Function<? super T, ? extends K> classifier) {
-        return stream.collect(Collectors.groupingByConcurrent(classifier));
-    }
-
-    /**
-     * groupByConcurrent
-     */
-    public <K, A, D> Map<? extends K, D> groupByConcurrent(Function<? super T, ? extends K> classifier,
-                                                           Collector<? super T, A, D> downstream) {
-        return stream.collect(Collectors.groupingByConcurrent(classifier, downstream));
-    }
-
-    /**
-     * groupByConcurrent
-     */
-    public <K, A, D, M extends ConcurrentMap<K, D>> M groupByConcurrent(Function<? super T, ? extends K> classifier,
-                                                                        Supplier<M> mapFactory,
-                                                                        Collector<? super T, A, D> downstream) {
-        return stream.collect(Collectors.groupingByConcurrent(classifier, mapFactory, downstream));
-    }
-
-
-
-    //**************** 对Stream流的接口实现 ****************//
 
     /**
      * Returns a stream consisting of the elements of this stream that match
@@ -279,8 +85,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the new stream
      */
     @Override
-    public ExStream<T> filter(Predicate<? super T> predicate) {
-        return of(stream.filter(predicate));
+    public ExMapStream<K, V> filter(Predicate<? super Map.Entry<K, V>> predicate) {
+        return ofStream(super.filter(predicate));
     }
 
     /**
@@ -296,8 +102,15 @@ public class ExStream<T> implements Stream<T> {
      * @return the new stream
      */
     @Override
-    public <R> ExStream<R> map(Function<? super T, ? extends R> mapper) {
-        return of(stream.map(mapper));
+    public <R> ExStream<R> map(Function<? super Map.Entry<K, V>, ? extends R> mapper) {
+        return super.map(mapper);
+    }
+
+    /**
+     * 转化为ExMap
+     */
+    public <C, U, E extends Map.Entry<C, U>> ExMapStream<C, U> mapToEntry(Function<? super Map.Entry<K, V>, ? extends E> mapper){
+        return ofStream(super.map(mapper));
     }
 
     /**
@@ -313,8 +126,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the new stream
      */
     @Override
-    public IntStream mapToInt(ToIntFunction<? super T> mapper) {
-        return stream.mapToInt(mapper);
+    public IntStream mapToInt(ToIntFunction<? super Map.Entry<K, V>> mapper) {
+        return super.mapToInt(mapper);
     }
 
     /**
@@ -330,8 +143,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the new stream
      */
     @Override
-    public LongStream mapToLong(ToLongFunction<? super T> mapper) {
-        return stream.mapToLong(mapper);
+    public LongStream mapToLong(ToLongFunction<? super Map.Entry<K, V>> mapper) {
+        return super.mapToLong(mapper);
     }
 
     /**
@@ -347,8 +160,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the new stream
      */
     @Override
-    public DoubleStream mapToDouble(ToDoubleFunction<? super T> mapper) {
-        return stream.mapToDouble(mapper);
+    public DoubleStream mapToDouble(ToDoubleFunction<? super Map.Entry<K, V>> mapper) {
+        return super.mapToDouble(mapper);
     }
 
     /**
@@ -391,8 +204,15 @@ public class ExStream<T> implements Stream<T> {
      * creates a stream of words from that array.
      */
     @Override
-    public <R> ExStream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper) {
-        return of(stream.flatMap(mapper));
+    public <R> ExStream<R> flatMap(Function<? super Map.Entry<K, V>, ? extends Stream<? extends R>> mapper) {
+        return super.flatMap(mapper);
+    }
+
+    /**
+     * 转化为ExMap
+     */
+    public <C, U> ExMapStream<C, U> flatMapToEntry(Function<? super Map.Entry<K, V>, ? extends Stream<? extends Map.Entry<C, U>>> mapper) {
+        return ofStream(super.flatMap(mapper));
     }
 
     /**
@@ -414,8 +234,8 @@ public class ExStream<T> implements Stream<T> {
      * @see #flatMap(Function)
      */
     @Override
-    public IntStream flatMapToInt(Function<? super T, ? extends IntStream> mapper) {
-        return stream.flatMapToInt(mapper);
+    public IntStream flatMapToInt(Function<? super Map.Entry<K, V>, ? extends IntStream> mapper) {
+        return super.flatMapToInt(mapper);
     }
 
     /**
@@ -437,8 +257,8 @@ public class ExStream<T> implements Stream<T> {
      * @see #flatMap(Function)
      */
     @Override
-    public LongStream flatMapToLong(Function<? super T, ? extends LongStream> mapper) {
-        return stream.flatMapToLong(mapper);
+    public LongStream flatMapToLong(Function<? super Map.Entry<K, V>, ? extends LongStream> mapper) {
+        return super.flatMapToLong(mapper);
     }
 
     /**
@@ -460,8 +280,8 @@ public class ExStream<T> implements Stream<T> {
      * @see #flatMap(Function)
      */
     @Override
-    public DoubleStream flatMapToDouble(Function<? super T, ? extends DoubleStream> mapper) {
-        return stream.flatMapToDouble(mapper);
+    public DoubleStream flatMapToDouble(Function<? super Map.Entry<K, V>, ? extends DoubleStream> mapper) {
+        return super.flatMapToDouble(mapper);
     }
 
     /**
@@ -490,8 +310,8 @@ public class ExStream<T> implements Stream<T> {
      * performance.
      */
     @Override
-    public ExStream<T> distinct() {
-        return of(stream.distinct());
+    public ExMapStream<K, V> distinct() {
+        return ofStream(super.distinct());
     }
 
     /**
@@ -509,8 +329,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the new stream
      */
     @Override
-    public ExStream<T> sorted() {
-        return of(stream.sorted());
+    public ExMapStream<K, V> sorted() {
+        return ofStream(super.sorted());
     }
 
     /**
@@ -529,8 +349,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the new stream
      */
     @Override
-    public ExStream<T> sorted(Comparator<? super T> comparator) {
-        return of(stream.sorted(comparator));
+    public ExMapStream<K, V> sorted(Comparator<? super Map.Entry<K, V>> comparator) {
+        return ofStream(super.sorted(comparator));
     }
 
     /**
@@ -562,8 +382,8 @@ public class ExStream<T> implements Stream<T> {
      * }</pre>
      */
     @Override
-    public ExStream<T> peek(Consumer<? super T> action) {
-        return of(stream.peek(action));
+    public ExMapStream<K, V> peek(Consumer<? super Map.Entry<K, V>> action) {
+        return ofStream(super.peek(action));
     }
 
     /**
@@ -590,8 +410,8 @@ public class ExStream<T> implements Stream<T> {
      * with {@link #sequential()} may improve performance.
      */
     @Override
-    public ExStream<T> limit(long maxSize) {
-        return of(stream.limit(maxSize));
+    public ExMapStream<K, V> limit(long maxSize) {
+        return ofStream(super.limit(maxSize));
     }
 
     /**
@@ -620,8 +440,8 @@ public class ExStream<T> implements Stream<T> {
      * with {@link #sequential()} may improve performance.
      */
     @Override
-    public ExStream<T> skip(long n) {
-        return of(stream.skip(n));
+    public ExMapStream<K, V> skip(long n) {
+        return ofStream(super.skip(n));
     }
 
     /**
@@ -642,8 +462,8 @@ public class ExStream<T> implements Stream<T> {
      *               non-interfering</a> action to perform on the elements
      */
     @Override
-    public void forEach(Consumer<? super T> action) {
-        stream.forEach(action);
+    public void forEach(Consumer<? super Map.Entry<K, V>> action) {
+        super.forEach(action);
     }
 
     /**
@@ -664,8 +484,8 @@ public class ExStream<T> implements Stream<T> {
      * @see #forEach(Consumer)
      */
     @Override
-    public void forEachOrdered(Consumer<? super T> action) {
-        stream.forEachOrdered(action);
+    public void forEachOrdered(Consumer<? super Map.Entry<K, V>> action) {
+        super.forEachOrdered(action);
     }
 
     /**
@@ -678,7 +498,7 @@ public class ExStream<T> implements Stream<T> {
      */
     @Override
     public Object[] toArray() {
-        return stream.toArray();
+        return super.toArray();
     }
 
     /**
@@ -707,7 +527,7 @@ public class ExStream<T> implements Stream<T> {
      */
     @Override
     public <A> A[] toArray(IntFunction<A[]> generator) {
-        return stream.toArray(generator);
+        return super.toArray(generator);
     }
 
     /**
@@ -759,8 +579,8 @@ public class ExStream<T> implements Stream<T> {
      * synchronization and with greatly reduced risk of data races.
      */
     @Override
-    public T reduce(T identity, BinaryOperator<T> accumulator) {
-        return stream.reduce(identity, accumulator);
+    public Map.Entry<K, V> reduce(Map.Entry<K, V> identity, BinaryOperator<Map.Entry<K, V>> accumulator) {
+        return super.reduce(identity, accumulator);
     }
 
     /**
@@ -802,8 +622,8 @@ public class ExStream<T> implements Stream<T> {
      * @see #max(Comparator)
      */
     @Override
-    public Optional<T> reduce(BinaryOperator<T> accumulator) {
-        return stream.reduce(accumulator);
+    public Optional<Map.Entry<K, V>> reduce(BinaryOperator<Map.Entry<K, V>> accumulator) {
+        return super.reduce(accumulator);
     }
 
     /**
@@ -852,8 +672,8 @@ public class ExStream<T> implements Stream<T> {
      * @see #reduce(Object, BinaryOperator)
      */
     @Override
-    public <U> U reduce(U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner) {
-        return stream.reduce(identity, accumulator, combiner);
+    public <U> U reduce(U identity, BiFunction<U, ? super Map.Entry<K, V>, U> accumulator, BinaryOperator<U> combiner) {
+        return super.reduce(identity, accumulator, combiner);
     }
 
     /**
@@ -906,8 +726,8 @@ public class ExStream<T> implements Stream<T> {
      * }</pre>
      */
     @Override
-    public <R> R collect(Supplier<R> supplier, BiConsumer<R, ? super T> accumulator, BiConsumer<R, R> combiner) {
-        return stream.collect(supplier, accumulator, combiner);
+    public <R> R collect(Supplier<R> supplier, BiConsumer<R, ? super Map.Entry<K, V>> accumulator, BiConsumer<R, R> combiner) {
+        return super.collect(supplier, accumulator, combiner);
     }
 
     /**
@@ -959,8 +779,8 @@ public class ExStream<T> implements Stream<T> {
      * @see Collectors
      */
     @Override
-    public <R, A> R collect(Collector<? super T, A, R> collector) {
-        return stream.collect(collector);
+    public <R, A> R collect(Collector<? super Map.Entry<K, V>, A, R> collector) {
+        return super.collect(collector);
     }
 
     /**
@@ -978,8 +798,8 @@ public class ExStream<T> implements Stream<T> {
      * @throws NullPointerException if the minimum element is null
      */
     @Override
-    public Optional<T> min(Comparator<? super T> comparator) {
-        return stream.min(comparator);
+    public Optional<Map.Entry<K, V>> min(Comparator<? super Map.Entry<K, V>> comparator) {
+        return super.min(comparator);
     }
 
     /**
@@ -998,8 +818,8 @@ public class ExStream<T> implements Stream<T> {
      * @throws NullPointerException if the maximum element is null
      */
     @Override
-    public Optional<T> max(Comparator<? super T> comparator) {
-        return stream.max(comparator);
+    public Optional<Map.Entry<K, V>> max(Comparator<? super Map.Entry<K, V>> comparator) {
+        return super.max(comparator);
     }
 
     /**
@@ -1016,7 +836,7 @@ public class ExStream<T> implements Stream<T> {
      */
     @Override
     public long count() {
-        return stream.count();
+        return super.count();
     }
 
     /**
@@ -1037,8 +857,8 @@ public class ExStream<T> implements Stream<T> {
      * predicate over the elements of the stream (for some x P(x)).
      */
     @Override
-    public boolean anyMatch(Predicate<? super T> predicate) {
-        return stream.anyMatch(predicate);
+    public boolean anyMatch(Predicate<? super Map.Entry<K, V>> predicate) {
+        return super.anyMatch(predicate);
     }
 
     /**
@@ -1061,8 +881,8 @@ public class ExStream<T> implements Stream<T> {
      * satisfied</em> and is always {@code true} (regardless of P(x)).
      */
     @Override
-    public boolean allMatch(Predicate<? super T> predicate) {
-        return stream.allMatch(predicate);
+    public boolean allMatch(Predicate<? super Map.Entry<K, V>> predicate) {
+        return super.allMatch(predicate);
     }
 
     /**
@@ -1085,8 +905,8 @@ public class ExStream<T> implements Stream<T> {
      * and is always {@code true}, regardless of P(x).
      */
     @Override
-    public boolean noneMatch(Predicate<? super T> predicate) {
-        return stream.noneMatch(predicate);
+    public boolean noneMatch(Predicate<? super Map.Entry<K, V>> predicate) {
+        return super.noneMatch(predicate);
     }
 
     /**
@@ -1102,8 +922,8 @@ public class ExStream<T> implements Stream<T> {
      * @throws NullPointerException if the element selected is null
      */
     @Override
-    public Optional<T> findFirst() {
-        return stream.findFirst();
+    public Optional<Map.Entry<K, V>> findFirst() {
+        return super.findFirst();
     }
 
     /**
@@ -1125,8 +945,8 @@ public class ExStream<T> implements Stream<T> {
      * @see #findFirst()
      */
     @Override
-    public Optional<T> findAny() {
-        return stream.findAny();
+    public Optional<Map.Entry<K, V>> findAny() {
+        return super.findAny();
     }
 
     /**
@@ -1138,8 +958,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the element iterator for this stream
      */
     @Override
-    public Iterator<T> iterator() {
-        return stream.iterator();
+    public Iterator<Map.Entry<K, V>> iterator() {
+        return super.iterator();
     }
 
     /**
@@ -1151,8 +971,8 @@ public class ExStream<T> implements Stream<T> {
      * @return the element spliterator for this stream
      */
     @Override
-    public Spliterator<T> spliterator() {
-        return stream.spliterator();
+    public Spliterator<Map.Entry<K, V>> spliterator() {
+        return super.spliterator();
     }
 
     /**
@@ -1164,7 +984,7 @@ public class ExStream<T> implements Stream<T> {
      */
     @Override
     public boolean isParallel() {
-        return stream.isParallel();
+        return super.isParallel();
     }
 
     /**
@@ -1178,8 +998,8 @@ public class ExStream<T> implements Stream<T> {
      * @return a sequential stream
      */
     @Override
-    public ExStream<T> sequential() {
-        return of(stream.sequential());
+    public ExMapStream<K, V> sequential() {
+        return ofStream(super.sequential());
     }
 
     /**
@@ -1193,8 +1013,8 @@ public class ExStream<T> implements Stream<T> {
      * @return a parallel stream
      */
     @Override
-    public ExStream<T> parallel() {
-        return of(stream.parallel());
+    public ExMapStream<K, V> parallel() {
+        return ofStream(super.parallel());
     }
 
     /**
@@ -1209,8 +1029,8 @@ public class ExStream<T> implements Stream<T> {
      * @return an unordered stream
      */
     @Override
-    public ExStream<T> unordered() {
-        return of(stream.unordered());
+    public ExMapStream<K, V> unordered() {
+        return ofStream(super.unordered());
     }
 
     /**
@@ -1232,22 +1052,8 @@ public class ExStream<T> implements Stream<T> {
      * @return a stream with a handler that is run if the stream is closed
      */
     @Override
-    public ExStream<T> onClose(Runnable closeHandler) {
-        return of(stream.onClose(closeHandler));
-    }
-
-    /**
-     * Returns a merge function, suitable for use in
-     * {@link Map#merge(Object, Object, BiFunction) Map.merge()} or
-     * {@link #toMap(Function, Function, BinaryOperator) toMap()}, which always
-     * throws {@code IllegalStateException}.  This can be used to enforce the
-     * assumption that the elements being collected are distinct.
-     *
-     * @param <T> the type of input arguments to the merge function
-     * @return a merge function which always throw {@code IllegalStateException}
-     */
-    protected static <T> BinaryOperator<T> throwingMerger() {
-        return (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
+    public ExMapStream<K, V> onClose(Runnable closeHandler) {
+        return ofStream(super.onClose(closeHandler));
     }
 
     /**
@@ -1258,6 +1064,6 @@ public class ExStream<T> implements Stream<T> {
      */
     @Override
     public void close() {
-        stream.close();
+        super.close();
     }
 }

@@ -1,5 +1,6 @@
 package forte.test;
 
+import com.forte.utils.collections.ExCollections;
 import com.forte.utils.collections.ExStream;
 import com.forte.utils.file.FilePlusUtils;
 import com.forte.utils.file.FileNameJoiner;
@@ -8,8 +9,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author ForteScarlet <[email]ForteScarlet@163.com>
@@ -46,6 +46,23 @@ public class Test1 {
 
 
         ExStream<Integer> of = ExStream.of(list);
+
+    }
+
+
+    @Test
+    public void test4(){
+        Map<String, Integer> map = new HashMap<>(100);
+        for (int i = 0; i < 100; i++) {
+            map.put(i + "", new Random().nextInt(100));
+        }
+
+        map.forEach((k, v) -> System.out.println(k + " = " + v));
+
+        System.out.println("==========================");
+
+        ExCollections.mapValueSorted(map).forEach((k, v) -> System.out.println(k + " = " + v));
+
 
     }
 

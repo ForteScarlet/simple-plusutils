@@ -1,7 +1,6 @@
 package com.forte.utils.collections;
 
 import java.util.*;
-import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

@@ -62,9 +62,22 @@ public class Test1 {
         System.out.println("==========================");
 
         ExCollections.mapValueSorted(map).forEach((k, v) -> System.out.println(k + " = " + v));
-
-
     }
 
+    @Test
+    public void test5(){
+        Map<String, Integer> map1 = new HashMap<>(100);
+        for (int i = 0; i < 100; i++) {
+            map1.put(i + "", new Random().nextInt(100));
+        }
+
+        Map<String, Integer> map2 = new HashMap<>(100);
+        for (int i = 100; i < 200; i++) {
+            map2.put(i + "", new Random().nextInt(100));
+        }
+
+        ExCollections.mapValueSorted(ExStream.of(map1).concat(map2)).forEach((k, v) -> System.out.println(k + " = " + v));
+
+    }
 
 }

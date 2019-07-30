@@ -46,6 +46,9 @@ public class ExStream<T> implements Stream<T> {
      * of
      */
     public static <T> ExStream<T> of(Stream<T> stream){
+        if(stream instanceof ExStream){
+            return (ExStream<T>) stream;
+        }
         return new ExStream<>(stream);
     }
 
@@ -60,7 +63,14 @@ public class ExStream<T> implements Stream<T> {
      * of
      */
     public static <K, V> ExMapStream<K, V> of(Map<K, V> map){
-        return new ExMapStream<>(map.entrySet().stream());
+        return ExMapStream.ofStream(map.entrySet().stream());
+    }
+
+    /**
+     * of
+     */
+    public static <K, V> ExMapStream<K, V> of(Map.Entry<K, V>[] array){
+        return ExMapStream.ofStream(Arrays.stream(array));
     }
 
 
@@ -128,13 +138,6 @@ public class ExStream<T> implements Stream<T> {
 
     /**
      * 转化为Map，如果出现键冲突则直接使用原版Stream的异常方法
-     * @param keyMapper
-     * @param valueMapper
-     * @param mapSupplier
-     * @param <K>
-     * @param <V>
-     * @param <M>
-     * @return
      */
     public <K, V, M extends Map<K, V>> Map<K, V> toMap(Function<? super T, ? extends K> keyMapper,
                                                        Function<? super T, ? extends V> valueMapper,
@@ -151,6 +154,42 @@ public class ExStream<T> implements Stream<T> {
             BinaryOperator<U> mergeFunction,
             Supplier<M> mapSupplier) {
         return stream.collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction, mapSupplier));
+    }
+    /**
+     * 转化为MapStream
+     */
+    public <K, V> ExMapStream<K, V> toMapStream(Function<? super T, ? extends K> keyMapper,
+                                  Function<? super T, ? extends V> valueMapper) {
+        return ExMapStream.ofMap(stream.collect(Collectors.toMap(keyMapper, valueMapper)));
+    }
+
+    /**
+     * 转化为MapStream
+     */
+    public <K, V> ExMapStream<K, V> toMapStream(Function<? super T, ? extends K> keyMapper,
+                                  Function<? super T, ? extends V> valueMapper,
+                                  BinaryOperator<V> mergeFunction) {
+        return ExMapStream.ofMap(stream.collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction)));
+    }
+
+    /**
+     * 转化为MapStream，如果出现键冲突则直接使用原版Stream的异常方法
+     */
+    public <K, V, M extends Map<K, V>> ExMapStream<K, V> toMapStream(Function<? super T, ? extends K> keyMapper,
+                                                       Function<? super T, ? extends V> valueMapper,
+                                                       Supplier<M> mapSupplier){
+        return ExMapStream.ofMap(stream.collect(Collectors.toMap(keyMapper, valueMapper, throwingMerger(), mapSupplier)));
+    }
+
+    /**
+     * 转化为MapStream
+     */
+    public <K, U, M extends Map<K, U>>
+    ExMapStream<K, U> toMapStream(Function<? super T, ? extends K> keyMapper,
+            Function<? super T, ? extends U> valueMapper,
+            BinaryOperator<U> mergeFunction,
+            Supplier<M> mapSupplier) {
+        return ExMapStream.ofMap(stream.collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction, mapSupplier)));
     }
 
 
@@ -261,6 +300,26 @@ public class ExStream<T> implements Stream<T> {
         return stream.collect(Collectors.groupingByConcurrent(classifier, mapFactory, downstream));
     }
 
+    /**
+     * concat
+     */
+    public ExStream<T> concat(Stream<T> concat){
+        return of(Stream.concat(stream, concat));
+    }
+
+    public ExStream<T> concat(T t){
+        return of(Stream.concat(stream, Stream.of(t)));
+    }
+
+    public ExStream<T> concat(T... t){
+        return of(Stream.concat(stream, Stream.of(t)));
+    }
+
+    public ExStream<T> concat(Collection<T> collection){
+        return of(Stream.concat(stream, collection.stream()));
+    }
+
+
 
 
     //**************** 对Stream流的接口实现 ****************//
@@ -284,6 +343,13 @@ public class ExStream<T> implements Stream<T> {
     }
 
     /**
+     * 过滤出不是null的
+     */
+    public ExStream<T> filterNonNull(){
+        return of(stream.filter(Objects::nonNull));
+    }
+
+    /**
      * Returns a stream consisting of the results of applying the given
      * function to the elements of this stream.
      *
@@ -298,6 +364,10 @@ public class ExStream<T> implements Stream<T> {
     @Override
     public <R> ExStream<R> map(Function<? super T, ? extends R> mapper) {
         return of(stream.map(mapper));
+    }
+
+    public <K, V, R extends Map.Entry<K, V>> ExMapStream<K, V> mapToEntry(Function<? super T, ? extends R> mapper){
+        return ExMapStream.ofStream(stream.map(mapper));
     }
 
     /**
@@ -393,6 +463,10 @@ public class ExStream<T> implements Stream<T> {
     @Override
     public <R> ExStream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper) {
         return of(stream.flatMap(mapper));
+    }
+
+    public <K, V, R extends Map.Entry<K, V>> ExMapStream<K, V> flatMapToEntry(Function<? super T, ? extends Stream<? extends R>> mapper){
+        return ExMapStream.ofStream(stream.flatMap(mapper));
     }
 
     /**
@@ -1235,6 +1309,7 @@ public class ExStream<T> implements Stream<T> {
     public ExStream<T> onClose(Runnable closeHandler) {
         return of(stream.onClose(closeHandler));
     }
+
 
     /**
      * Returns a merge function, suitable for use in

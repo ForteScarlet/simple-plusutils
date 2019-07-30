@@ -1,6 +1,7 @@
 package com.forte.utils.collections;
 
 import java.util.*;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,6 +56,22 @@ public class ExCollections {
     /**
      * 为Map排序
      */
+    public static <K extends Comparable<K>, V> Map<K, V> mapKeySorted(Stream<Map.Entry<K, V>> stream){
+        return ExMapStream.ofStream(stream).sorted(Comparator.comparing(Map.Entry::getKey))
+                .toLinkedMap();
+    }
+
+    /**
+     * 为Map排序
+     */
+    public static <K, V extends Comparable<V>> Map<K, V> mapValueSorted(Stream<Map.Entry<K, V>> stream){
+        return ExMapStream.ofStream(stream).sorted(Comparator.comparing(Map.Entry::getValue))
+                .toLinkedMap();
+    }
+
+    /**
+     * 为Map排序
+     */
     public static <K, V> Map<K, V> mapKeySorted(Map<K, V> map, Comparator<K> keyCompared){
         return ExStream.of(map).sorted((e1, e2) -> keyCompared.compare(e1.getKey(), e2.getKey()))
                 .toLinkedMap();
@@ -67,5 +84,30 @@ public class ExCollections {
         return ExStream.of(map).sorted((e1, e2) -> valueCompared.compare(e1.getValue(), e2.getValue()))
                 .toLinkedMap();
     }
+    /**
+     * 为Map排序
+     */
+    public static <K, V> Map<K, V> mapKeySorted(Stream<Map.Entry<K, V>> stream, Comparator<K> keyCompared){
+        return ExMapStream.ofStream(stream).sorted((e1, e2) -> keyCompared.compare(e1.getKey(), e2.getKey()))
+                .toLinkedMap();
+    }
+
+    /**
+     * 为Map排序
+     */
+    public static <K, V> Map<K, V> mapValueSorted(Stream<Map.Entry<K, V>> stream, Comparator<V> valueCompared){
+        return ExMapStream.ofStream(stream).sorted((e1, e2) -> valueCompared.compare(e1.getValue(), e2.getValue()))
+                .toLinkedMap();
+    }
+
+    /**
+     * 转化为可变的List
+     */
+    public static <A> List<A> toList(A[] array){
+        return ExStream.of(array).toList();
+    }
+
+
+
 
 }

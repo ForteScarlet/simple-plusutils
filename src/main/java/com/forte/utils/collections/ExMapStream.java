@@ -16,13 +16,47 @@ public class ExMapStream<K, V> extends ExStream<Map.Entry<K, V>> {
      *
      * @param stream
      */
-    public ExMapStream(Stream<Map.Entry<K, V>> stream) {
+    private ExMapStream(Stream<Map.Entry<K, V>> stream) {
         super(stream);
     }
 
 
     public static <K, V> ExMapStream<K, V> ofStream(Stream<Map.Entry<K, V>> stream){
+        if(stream instanceof ExMapStream){
+            return (ExMapStream<K, V>) stream;
+        }
         return new ExMapStream<>(stream);
+    }
+
+    public static <K, V> ExMapStream<K, V> ofMap(Map<K, V> map){
+        return ofStream(map.entrySet().stream());
+    }
+
+    public static <K, V> ExMapStream<K, V> ofCollection(Collection<Map.Entry<K, V>> collection){
+        return ofStream(collection.stream());
+    }
+
+    public static <K, V> ExMapStream<K, V> ofArray(Map.Entry<K, V>[] array){
+        return ofStream(Arrays.stream(array));
+    }
+
+    @Override
+    public ExMapStream<K, V> concat(Stream<Map.Entry<K, V>> concat){
+        return ofStream(Stream.concat(stream, concat));
+    }
+
+    public ExMapStream<K, V> concat(Map<K, V> map){
+        return ofStream(Stream.concat(stream, map.entrySet().stream()));
+    }
+
+    @Override
+    public ExMapStream<K, V> concat(Collection<Map.Entry<K, V>> collection){
+        return concat(Stream.concat(stream, collection.stream()));
+    }
+
+    @Override
+    public ExMapStream<K, V> concat(Map.Entry<K, V>[] entries){
+        return concat(Stream.concat(stream, Arrays.stream(entries)));
     }
 
 
@@ -109,6 +143,7 @@ public class ExMapStream<K, V> extends ExStream<Map.Entry<K, V>> {
     /**
      * 转化为ExMap
      */
+    @Override
     public <C, U, E extends Map.Entry<C, U>> ExMapStream<C, U> mapToEntry(Function<? super Map.Entry<K, V>, ? extends E> mapper){
         return ofStream(super.map(mapper));
     }
@@ -206,13 +241,6 @@ public class ExMapStream<K, V> extends ExStream<Map.Entry<K, V>> {
     @Override
     public <R> ExStream<R> flatMap(Function<? super Map.Entry<K, V>, ? extends Stream<? extends R>> mapper) {
         return super.flatMap(mapper);
-    }
-
-    /**
-     * 转化为ExMap
-     */
-    public <C, U> ExMapStream<C, U> flatMapToEntry(Function<? super Map.Entry<K, V>, ? extends Stream<? extends Map.Entry<C, U>>> mapper) {
-        return ofStream(super.flatMap(mapper));
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.forte.utils.thread;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -77,7 +76,7 @@ public abstract class BaseLocalThreadPool {
      * ArrayBlockingQueue和PriorityBlockingQueue使用较少，一般使用LinkedBlockingQueue和Synchronous。
      * 线程池的排队策略与BlockingQueue有关。
      */
-    private static BlockingQueue<Runnable> workQueue = new SynchronousQueue();
+    private static BlockingQueue<Runnable> workQueue = new SynchronousQueue<>();
 
 
 
@@ -100,16 +99,25 @@ public abstract class BaseLocalThreadPool {
         poolWarehouse = new ConcurrentHashMap<>(4);
 
 //        Map<String, Executor> fixedMap = new HashMap<>(1);
+        PoolConfig poolConfig = new PoolConfig();
         poolWarehouse.put(
         		defaultName, 
         		new ThreadPoolExecutor(
-	        		corePoolSize,
-	                maximumPoolSize,
-	                keepAliveTime,
-	                timeUnit,
-	                workQueue,
-	                defaultThreadFactory
+	        		poolConfig.getCorePoolSize(),
+	                poolConfig.getMaximumPoolSize(),
+	                poolConfig.getKeepAliveTime(),
+	                poolConfig.getTimeUnit(),
+	                poolConfig.getWorkQueue(),
+	                poolConfig.getDefaultThreadFactory()
         		));
+    }
+
+    /**
+     * 创建线程池的工厂,无名称，使用默认
+     * @return
+     */
+    public static Executor getThreadPool() {
+        return createThreadPool(null);
     }
 
     /**
@@ -127,8 +135,8 @@ public abstract class BaseLocalThreadPool {
      *
      * @return
      */
-    public static Executor getThreadPool() {
-        return createThreadPool(null);
+    public static Executor getThreadPool(PoolConfig poolConfig) {
+        return createThreadPool(null, poolConfig);
     }
 
     /**
@@ -141,15 +149,6 @@ public abstract class BaseLocalThreadPool {
         return createThreadPool(poolName, poolConfig);
     }
 
-    /**
-     * 创建线程池的工厂,无名称，使用默认
-     *
-     * @return
-     */
-    public static Executor getThreadPool(PoolConfig poolConfig) {
-        return createThreadPool(null, poolConfig);
-    }
-
 
     /**
      * 清除某指定的线程池
@@ -158,13 +157,8 @@ public abstract class BaseLocalThreadPool {
      * @return
      */
     public static boolean removeThreadPool(String poolName) {
-
         //移除
-        Executor remove = poolWarehouse.remove(poolName);
-        if (remove == null) {
-            return false;
-        }
-        return true;
+        return poolWarehouse.remove(poolName) != null;
     }
 
 
@@ -174,15 +168,13 @@ public abstract class BaseLocalThreadPool {
      * @return
      */
     public static Executor getLocalThreadPool() {
-        Executor localThreadPool = createLocalThreadPool();
-        return localThreadPool;
+        return createLocalThreadPool();
     }
 
     /**
      * 清除本线程中的线程池
      */
     public static boolean removeLocalThreadPool() {
-        Boolean b = true;
         try {
             localExecutorThread.remove();
             return true;
@@ -208,13 +200,13 @@ public abstract class BaseLocalThreadPool {
      *  通过配置类创建
      */
     private static Executor createThreadPool(String poolName, PoolConfig config) {
-        Executor executor = null;
-
+        Executor executor;
+        config = config == null ? new PoolConfig() : config;
         //如果名称为null，获取默认
         if (poolName == null) {
             executor = poolWarehouse.get(defaultName);
             if (executor == null) {
-                executor = config == null ? createExecutor() : createExecutor(config);
+                executor = createExecutor(config);
                 //保存
                 poolWarehouse.put(defaultName, executor);
             }
@@ -224,7 +216,7 @@ public abstract class BaseLocalThreadPool {
             if (executorGet == null) {
                 //获取不到,创建新的并保存
                 //创建并赋值
-                executorGet = config == null ? createExecutor() : createExecutor(config);
+                executorGet = createExecutor(config);
                 //保存
                 poolWarehouse.put(poolName, executorGet);
             }
@@ -246,33 +238,32 @@ public abstract class BaseLocalThreadPool {
 
     /**
      * 创建本线程同步线程池
-     *
      * @return
      */
     private static Executor createLocalThreadPool() {
         Executor executor = localExecutorThread.get();
         if (executor == null) {
             //如果没有，创建
-            executor = createExecutor();
+            executor = createExecutor(new PoolConfig());
+            localExecutorThread.set(executor);
+        }
+        return executor;
+    }
+    /**
+     * 创建本线程同步线程池
+     *
+     * @return
+     */
+    private static Executor createLocalThreadPool(PoolConfig config) {
+        Executor executor = localExecutorThread.get();
+        if (executor == null) {
+            //如果没有，创建
+            executor = createExecutor(config);
             localExecutorThread.set(executor);
         }
         return executor;
     }
 
-
-    /**
-     * 创建一个新的线程池对象
-     * 使用默认参数
-     */
-    private static Executor createExecutor() {
-        return new ThreadPoolExecutor(corePoolSize,
-                maximumPoolSize,
-                keepAliveTime,
-                timeUnit,
-                workQueue,
-                defaultThreadFactory
-        );
-    }
 
     /**
      * 根据配置对象创建一个新的线程
@@ -401,7 +392,7 @@ public abstract class BaseLocalThreadPool {
          * ArrayBlockingQueue和PriorityBlockingQueue使用较少，一般使用LinkedBlockingQueue和Synchronous。
          * 线程池的排队策略与BlockingQueue有关。
          */
-        private BlockingQueue<Runnable> workQueue = new SynchronousQueue();
+        private BlockingQueue<Runnable> workQueue = new SynchronousQueue<>();
 
 
 

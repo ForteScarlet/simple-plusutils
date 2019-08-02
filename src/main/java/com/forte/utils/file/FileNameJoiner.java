@@ -7,7 +7,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * 文件名拼接类
+ * 简单的文件名拼接类
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/

@@ -109,7 +109,7 @@ public class ChineseUtil {
      * @return
      */
     public static String getChinese(String encoding) {
-        String str = null;
+        String str;
         String str2 = null;
         int highPos, lowPos;
         Random random = new Random();

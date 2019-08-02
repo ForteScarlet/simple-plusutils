@@ -235,6 +235,26 @@ public class FieldUtils {
     }
 
     /**
+     * 获取某个类的全部getter
+     */
+    public static List<Method> getGetters(Class<?> tClass){
+         //getter应该都是public的，所以只获取公共方法
+        Method[] methods = tClass.getMethods();
+        Method[] objectMethods = Object.class.getMethods();
+        return Arrays.stream(methods)
+                .filter(m -> m.getName().matches("get[A-Z]\\w+") && m.getReturnType() != void.class && m.getParameters().length == 0 && Arrays.stream(objectMethods).noneMatch(om -> om.equals(m)) ).collect(Collectors.toList());
+    }
+
+//    /**
+//     * 根据字段来获取getters
+//     * @param tClass
+//     * @return
+//     */
+//    public static List<Method> getGettersByField(Class<?> tClass){
+//
+//    }
+
+    /**
      * 获取对象的所有字段
      *
      * @param t

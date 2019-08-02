@@ -1,6 +1,5 @@
 package com.forte.utils.collections;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -44,6 +43,7 @@ public class ExMapStream<K, V> extends ExStream<Map.Entry<K, V>> {
     public ExMapStream<K, V> concat(Stream<Map.Entry<K, V>> concat){
         return ofStream(Stream.concat(stream, concat));
     }
+
 
     public ExMapStream<K, V> concat(Map<K, V> map){
         return ofStream(Stream.concat(stream, map.entrySet().stream()));
@@ -99,6 +99,7 @@ public class ExMapStream<K, V> extends ExStream<Map.Entry<K, V>> {
     private Function<? super Map.Entry<K, V>, ? extends K> defaultKeyMapper(){
         return Map.Entry::getKey;
     }
+
 
     private Function<? super Map.Entry<K, V>, ? extends V> defaultValueMapper(){
         return Map.Entry::getValue;

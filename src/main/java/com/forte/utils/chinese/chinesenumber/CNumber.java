@@ -8,14 +8,19 @@ import java.util.HashMap;
  */
 public class CNumber<N extends Number> extends Number implements Comparable<CNumber> {
 
+    /** 数字对应的字符串 */
     private final String CHINESE_STR;
 
+    /** 真正的NUM对象 */
     private final N NUM;
 
+    /** 真正的数字对象 */
     private final BigDecimal REAL_NUM;
 
+    /** 是否为浮点数 */
     private final boolean FLOAT_NUM;
 
+    /** 是否为负数 */
     private final boolean NEGATIVE;
 
     /**
@@ -287,4 +292,7 @@ public class CNumber<N extends Number> extends Number implements Comparable<CNum
     public String toNumString(){
         return NUM.toString();
     }
+
+
+
 }

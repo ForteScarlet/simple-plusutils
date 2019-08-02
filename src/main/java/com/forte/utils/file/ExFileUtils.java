@@ -5,7 +5,7 @@ package com.forte.utils.file;
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/
-public class FilePlusUtils {
+public class ExFileUtils {
 
     /**
      * 获取FileNameJoiner

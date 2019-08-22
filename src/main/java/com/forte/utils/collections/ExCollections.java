@@ -1,5 +1,8 @@
 package com.forte.utils.collections;
 
+import com.forte.utils.stream.ExMapStream;
+import com.forte.utils.stream.ExStream;
+
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;

@@ -148,6 +148,9 @@ public class FieldUtils {
             Boolean.class,
     };
 
+    /** Object类中的所有方法列表 */
+    private static final Method[] OBJECT_METHODS = Object.class.getMethods();
+
     /**
      * 获取Excel中列的数字坐标<br>
      * 例如:"AA" => 27
@@ -176,6 +179,26 @@ public class FieldUtils {
 
         //返回结果
         return end;
+    }
+
+    /**
+     * 获取Object对象中的全部公共方法
+     */
+    public static Method[] getObjectMethods(){
+        return OBJECT_METHODS;
+    }
+
+    /**
+     * 判断一个方法是否为Object对象中继承来的方法
+     * @param method method对象
+     */
+    public static boolean isObjectMethod(Method method){
+        for (Method objectMethod : OBJECT_METHODS) {
+            if(objectMethod.equals(method)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

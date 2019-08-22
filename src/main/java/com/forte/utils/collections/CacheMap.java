@@ -1,5 +1,7 @@
 package com.forte.utils.collections;
 
+import com.forte.utils.stream.ExStream;
+
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.TemporalUnit;

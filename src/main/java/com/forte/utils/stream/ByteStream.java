@@ -1,15 +1,16 @@
 package com.forte.utils.stream;
 
-import com.forte.utils.basis.MD5Utils;
-import com.forte.utils.function.ExFunction;
-import com.forte.utils.function.FunctionThrows;
+import com.forte.utils.ables.MD5Able;
+import com.forte.utils.function.ByteConsumer;
+import com.forte.utils.function.ByteFunction;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.*;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * 基础数据类型中的byte类型Stream
@@ -17,13 +18,16 @@ import java.util.stream.*;
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/
-public class ByteStream implements IntStream {
+public class ByteStream implements IntStream, MD5Able {
 
     /**
      * 真正的Stream
      */
     private IntStream stream;
 
+    /**
+     * 编码格式
+     */
     private Charset charset;
 
     private ByteStream(IntStream stream) {
@@ -33,19 +37,19 @@ public class ByteStream implements IntStream {
 
     private ByteStream(IntStream stream, Charset charset) {
         this.stream = stream;
-        this.charset = charset;
+        this.charset = charset == null ? Charset.defaultCharset() : charset;
     }
 
     private ByteStream(IntStream stream, String charsetName){
         this.stream = stream;
-        this.charset = Charset.forName(charsetName);
+        this.charset = charsetName == null ? Charset.defaultCharset() : Charset.forName(charsetName);
     }
 
-    private static ByteStream of(IntStream intStream, Charset charset) {
+    static ByteStream of(IntStream intStream, Charset charset) {
         return new ByteStream(intStream, charset);
     }
 
-    private static ByteStream of(IntStream intStream) {
+    static ByteStream of(IntStream intStream) {
         return new ByteStream(intStream);
     }
 
@@ -127,11 +131,6 @@ public class ByteStream implements IntStream {
         return of(str.getBytes());
     }
 
-
-    public static ByteStream ofBytes(String str){
-        return of(str.getBytes());
-    }
-
     public static ByteStream of(String str, Charset charset){
         return of(charset, str.getBytes(charset));
     }
@@ -151,67 +150,49 @@ public class ByteStream implements IntStream {
         return ExStream.of(mapToObj(i -> (byte) i));
     }
 
+    @Override
     public String toStr(Charset charset){
         return new String(toByteArray(), charset);
     }
 
+    @Override
     public String toStr(String charsetName) throws UnsupportedEncodingException {
         return new String(toByteArray(), charsetName);
     }
 
+    @Override
     public String toStr(){
-        return new String(toByteArray());
+        return new String(toByteArray(), charset);
+    }
+
+
+    /**
+     * 转化为int类型的流
+     */
+    public IntStream mapToInt(){
+        return stream;
     }
 
     /**
-     * 转化为MD5
+     * 根据字符串转化为char流
      */
-    public String toMD5() throws NoSuchAlgorithmException {
-        return MD5Utils.toMD5(toStr());
+    public CharStream mapToChar(){
+        return CharStream.of(toStr());
     }
     /**
-     * 转化为MD5
+     * 根据字符串转化为char流
      */
-    public String toMD5(String charsetName) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        return MD5Utils.toMD5(toStr(charsetName));
+    public CharStream mapToChar(String charsetName) throws UnsupportedEncodingException {
+        return CharStream.of(toStr(charsetName));
     }
     /**
-     * 转化为MD5
+     * 根据字符串转化为char流
      */
-    public String toMD5(Charset charset) throws NoSuchAlgorithmException {
-        return MD5Utils.toMD5(toStr(charset));
+    public CharStream mapToChar(Charset charset){
+        return CharStream.of(toStr(charset));
     }
 
-    /**
-     * 转化为MD5，加盐并自定义盐函数
-     * @param salt          盐
-     * @param saltFunction
-     * 盐函数<br>
-     * 盐函数中，第一个参数为MD5字符串获取函数，参数为一个字符串，返回一个MD5字符串<br>
-     * 第二个参数为原本的字符串<br>
-     * 第三个参数为盐<br>
-     * 返回值为加密好的MD5<br>
-     *     <code>
-     *              String md = "hello!hahahahahahh";
-     *              String s = ByteStream.of(md).toMD5("salt", (f, str, salt) -> {
-     *             try {
-     *                 return f.apply(str + '.' + salt);
-     *             } catch (Throwable throwable) {
-     *                 return null;
-     *             }
-     *         });
-     *     </code>
-     * @return
-   */
-    public String toMD5(String salt, ExFunction<FunctionThrows<String, String>, String, String, String> saltFunction) {
-        return saltFunction.apply(MD5Utils::toMD5, toStr(), salt);
-    }
-    public String toMD5(String salt, Charset charset, ExFunction<FunctionThrows<String, String>, String, String, String> saltFunction) {
-        return saltFunction.apply(MD5Utils::toMD5, toStr(charset), salt);
-    }
-    public String toMD5(String salt, String charsetName, ExFunction<FunctionThrows<String, String>, String, String, String> saltFunction) throws UnsupportedEncodingException {
-        return saltFunction.apply(MD5Utils::toMD5, toStr(charsetName), salt);
-    }
+
 
 
     //**************** 实现接口方法 ****************//
@@ -232,6 +213,10 @@ public class ByteStream implements IntStream {
         return ExStream.of(stream.mapToObj(mapper));
     }
 
+    public <U> ExStream<U> mapToObj(ByteFunction<? extends U> mapper) {
+        return ExStream.of(stream.mapToObj(mapper));
+    }
+
     @Override
     public LongStream mapToLong(IntToLongFunction mapper) {
         return stream.mapToLong(mapper);
@@ -244,6 +229,10 @@ public class ByteStream implements IntStream {
 
     @Override
     public ByteStream flatMap(IntFunction<? extends IntStream> mapper) {
+        return of(stream.flatMap(mapper), charset);
+    }
+
+    public ByteStream flatMap(ByteFunction<? extends IntStream> mapper) {
         return of(stream.flatMap(mapper), charset);
     }
 
@@ -279,6 +268,14 @@ public class ByteStream implements IntStream {
 
     @Override
     public void forEachOrdered(IntConsumer action) {
+        stream.forEachOrdered(action);
+    }
+
+    public void forEach(ByteConsumer action) {
+        stream.forEach(action);
+    }
+
+    public void forEachOrdered(ByteConsumer action) {
         stream.forEachOrdered(action);
     }
 
@@ -389,17 +386,17 @@ public class ByteStream implements IntStream {
     }
 
     @Override
-    public IntStream parallel() {
+    public ByteStream parallel() {
         return of(stream.parallel());
     }
 
     @Override
-    public IntStream unordered() {
+    public ByteStream unordered() {
         return of(stream.unordered());
     }
 
     @Override
-    public IntStream onClose(Runnable closeHandler) {
+    public ByteStream onClose(Runnable closeHandler) {
         return of(stream.onClose(closeHandler));
     }
 

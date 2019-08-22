@@ -1,5 +1,9 @@
 package com.forte.utils.stream;
 
+import com.forte.utils.function.ParseTo;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.*;
@@ -90,6 +94,8 @@ public class ExStream<T> implements Stream<T> {
 
     //**************** 整合其他 ****************//
 
+    //**************** byte ****************//
+
     public static ByteStream ofByte(byte... values) {
         return ByteStream.of(values);
     }
@@ -97,6 +103,55 @@ public class ExStream<T> implements Stream<T> {
     public static ByteStream ofByte(byte value) {
         return ByteStream.of(value);
     }
+
+    public static ByteStream ofByte(String str){
+        return ByteStream.of(str);
+    }
+    public static ByteStream ofByte(Charset charset, byte... values) {
+        return ByteStream.of(charset, values);
+    }
+
+    public static ByteStream ofByte(Charset charset, byte value) {
+        return ByteStream.of(charset, value);
+    }
+
+    public static ByteStream ofByte(String str, Charset charset){
+        return ByteStream.of(str, charset);
+    }
+    public static ByteStream ofByte(String str, String charsetName) throws UnsupportedEncodingException {
+        return ByteStream.of(str, charsetName);
+    }
+
+    //**************** char ****************//
+
+    public static CharStream ofChar(char c){
+        return CharStream.of(c);
+    }
+
+    public static CharStream ofChar(char... values){
+        return CharStream.of(values);
+    }
+
+    public static CharStream ofChar(String string){
+        return CharStream.of(string);
+    }
+
+
+
+
+
+    //**************** 转化 ****************//
+
+    public CharStream mapToChar(ParseTo.ToChar<T> toChar){
+        return CharStream.of(stream.mapToInt(t -> (int) toChar.apply(t)));
+    }
+
+    public ByteStream mapToByte(ParseTo.ToByte<T> toByte){
+        return ByteStream.of(stream.mapToInt(t -> (int) toByte.apply(t)));
+    }
+
+
+
 
 
     //**************** 简化用的方法 ****************//
@@ -155,7 +210,7 @@ public class ExStream<T> implements Stream<T> {
     /**
      * 转化为MapStream
      */
-    public <K, V> ExMapStream<K, V> toMapStream(Function<? super T, ? extends K> keyMapper,
+    public <K, V> ExMapStream<K, V> maptoMap(Function<? super T, ? extends K> keyMapper,
                                                 Function<? super T, ? extends V> valueMapper) {
         return ExMapStream.ofMap(getStream().collect(Collectors.toMap(keyMapper, valueMapper)));
     }
@@ -163,7 +218,7 @@ public class ExStream<T> implements Stream<T> {
     /**
      * 转化为MapStream
      */
-    public <K, V> ExMapStream<K, V> toMapStream(Function<? super T, ? extends K> keyMapper,
+    public <K, V> ExMapStream<K, V> maptoMap(Function<? super T, ? extends K> keyMapper,
                                                 Function<? super T, ? extends V> valueMapper,
                                                 BinaryOperator<V> mergeFunction) {
         return ExMapStream.ofMap(getStream().collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction)));
@@ -172,7 +227,7 @@ public class ExStream<T> implements Stream<T> {
     /**
      * 转化为MapStream，如果出现键冲突则直接使用原版Stream的异常方法
      */
-    public <K, V, M extends Map<K, V>> ExMapStream<K, V> toMapStream(Function<? super T, ? extends K> keyMapper,
+    public <K, V, M extends Map<K, V>> ExMapStream<K, V> maptoMap(Function<? super T, ? extends K> keyMapper,
                                                                      Function<? super T, ? extends V> valueMapper,
                                                                      Supplier<M> mapSupplier) {
         return ExMapStream.ofMap(getStream().collect(Collectors.toMap(keyMapper, valueMapper, throwingMerger(), mapSupplier)));
@@ -182,7 +237,7 @@ public class ExStream<T> implements Stream<T> {
      * 转化为MapStream
      */
     public <K, U, M extends Map<K, U>>
-    ExMapStream<K, U> toMapStream(Function<? super T, ? extends K> keyMapper,
+    ExMapStream<K, U> maptoMap(Function<? super T, ? extends K> keyMapper,
                                   Function<? super T, ? extends U> valueMapper,
                                   BinaryOperator<U> mergeFunction,
                                   Supplier<M> mapSupplier) {
@@ -342,7 +397,6 @@ public class ExStream<T> implements Stream<T> {
     public <R> ExStream<R> map(Function<? super T, ? extends R> mapper) {
         return toEx(getStream().map(mapper));
     }
-
 
     public <K, V, R extends Map.Entry<K, V>> ExMapStream<K, V> mapToEntry(Function<? super T, ? extends R> mapper) {
         return ExMapStream.ofStream(getStream().map(mapper));

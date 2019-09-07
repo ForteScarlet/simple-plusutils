@@ -1,13 +1,13 @@
 package com.forte.utils.file;
 
 import com.forte.utils.stream.CharStream;
-import com.forte.utils.stream.ExStream;
 import com.forte.utils.stream.StringStream;
 
 import java.io.*;
-import java.nio.CharBuffer;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 
 /**

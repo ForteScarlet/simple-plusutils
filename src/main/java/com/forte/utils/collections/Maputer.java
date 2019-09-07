@@ -20,7 +20,15 @@ public class Maputer {
     /**
      * 向map中存放一个值
      * 如果存在，将存在的值传入并返回一个要保存的值
-     * 如果不存在，无参数，获取一个要保存的值
+     * 如果不存在，无参数，获取一个要保存的值<br>
+     *     <code>
+     *         Map<String, Integer> map = new HashMap<>(2);
+     *         int value = 20;
+     *         Maputer.put(map, "key", e -> e + value, () -> value);
+     *         // 第一次的结果，放进去了value，key:20
+     *         Maputer.put(map, "key", e -> e + value, () -> value);
+     *         // 第二次的结果，本来是存在的，所以老值 + 放入值，key:40
+     *     </code>
      * @param map       操作的map
      * @param key       操作的key
      * @param ifExist   如果值存在的函数
@@ -49,9 +57,17 @@ public class Maputer {
     }
 
     /**
-     * 向map中存放一个值
-     * 如果存在，将存在的值传入并返回一个要保存的值
-     * 如果不存在，无参数，获取一个要保存的值
+     * 获取map中的某个值
+     * 如果存在，操作这个值，否则存入一个值
+     * 如果不存在，无参数，获取一个要保存的值<br>
+     *     <code>
+     *         Map<String, Integer> map = new HashMap<>(2);
+     *         int value = 20;
+     *         Maputer.put(map, "key", e -> e + value, () -> value);
+     *         // 第一次的结果，放进去了value，key:20
+     *         Maputer.put(map, "key", e -> e + value, () -> value);
+     *         // 第二次的结果，本来是存在的，所以老值 + 放入值，key:40
+     *     </code>
      * @param map       操作的map
      * @param key       操作的key
      * @param ifExist   如果值存在的函数

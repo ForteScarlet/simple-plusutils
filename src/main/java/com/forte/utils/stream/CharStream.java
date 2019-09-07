@@ -1,9 +1,12 @@
 package com.forte.utils.stream;
 
 import com.forte.utils.ables.MD5Able;
+import com.forte.utils.file.ExFileUtils;
 import com.forte.utils.function.CharConsumer;
 import com.forte.utils.function.CharFunction;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -56,15 +59,17 @@ public class CharStream implements IntStream, MD5Able {
     }
 
 
-    static CharStream of(IntStream intStream, Charset charset) {
+    public static CharStream of(IntStream intStream, Charset charset) {
         return new CharStream(intStream, charset);
     }
 
-
-    static CharStream of(IntStream intStream) {
+    public static CharStream of(IntStream intStream) {
         return new CharStream(intStream);
     }
 
+    public static CharStream of(Stream<Integer> intStream){
+        return new CharStream(intStream.mapToInt(i -> i));
+    }
 
     public static CharStream of(int t){
         return of(IntStream.of(t));
@@ -91,16 +96,32 @@ public class CharStream implements IntStream, MD5Able {
     }
 
 
+    public static CharStream read(File file) throws IOException {
+        return ExFileUtils.getChars(file);
+    }
+
     //**************** 扩展方法 ****************//
+
+    /**
+     * 数据写入文件
+     */
+    public void write(File file) throws IOException {
+        ExFileUtils.write(file, this);
+    }
 
     @Override
     public String toStr() {
+//        StringBuilder b = new StringBuilder();
+//        forEach(b::append);
+//        return b.toString();
         int[] ints = stream.toArray();
-        char[] chars = new char[ints.length];
-        for (int i = 0; i < ints.length; i++) {
-            chars[i] = (char) ints[i];
-        }
-        return new String(chars);
+        return new String(ints, 0, ints.length);
+//        int[] ints = stream.toArray();
+//        char[] chars = new char[ints.length];
+//        for (int i = 0; i < ints.length; i++) {
+//            chars[i] = (char) ints[i];
+//        }
+//        return new String(chars, 0, ints.length);
     }
 
     @Override

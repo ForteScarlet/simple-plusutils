@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
  **/
 public class MD5Utils {
 
-    public static String toMD5(String inStr) throws NoSuchAlgorithmException {
+    public static String toMD5(String inStr)  {
         char[] charArray = inStr.toCharArray();
         byte[] byteArray = new byte[charArray.length];
 
@@ -23,10 +23,15 @@ public class MD5Utils {
     }
 
 
-    public static String toMD5(byte[] byteArray) throws NoSuchAlgorithmException {
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
+    public static String toMD5(byte[] byteArray) {
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
         byte[] md5Bytes = md5.digest(byteArray);
-        StringBuffer hexValue = new StringBuffer();
+        StringBuilder hexValue = new StringBuilder();
 
         for (int i = 0; i < md5Bytes.length; i++) {
 

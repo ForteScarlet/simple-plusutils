@@ -2,6 +2,7 @@ package com.forte.utils.stream;
 
 import com.forte.utils.function.ParseTo;
 
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -11,6 +12,7 @@ import java.util.stream.*;
 
 /**
  * 流拓展, 内部存在一个stream对象，此类基本上仅作为简化部分繁琐的步骤
+ * 如果想操作原生Stream对象，可以尝试一下
  *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
@@ -22,6 +24,13 @@ public class ExStream<T> implements Stream<T> {
      */
     protected final Stream<T> stream;
 
+
+    @Override
+    public String toString(){
+        return ExStream.class.getName() + "@" + Integer.toHexString(hashCode());
+    }
+
+
     /**
      * 构造，以指定内部流对象
      */
@@ -32,7 +41,7 @@ public class ExStream<T> implements Stream<T> {
     /**
      * 获取真实的stream
      */
-    public Stream<T> getStream() {
+    protected Stream<T> getStream() {
         return stream;
     }
 
@@ -43,6 +52,29 @@ public class ExStream<T> implements Stream<T> {
 
 
     //**************** 工厂方法 ****************//
+
+
+    /**
+     * 一个基于迭代器的流对象
+     * @param iter
+     * @param <T>
+     * @return
+     */
+    public static <T> ExStream<T> byIter(Iterator<T> iter, boolean parallel){
+        Stream<T> stream = StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(iter, Spliterator.ORDERED | Spliterator.NONNULL),
+                parallel
+        );
+        return ExStream.of(stream);
+    };
+
+    /**
+     * 基于迭代器的流对象，并使用ExStream封装
+     */
+    public static <T> ExStream<T> byIter(Iterator<T> iter){
+        return byIter(iter, false);
+    }
+
 
     //**************** 普通的工厂方法 ****************//
 
@@ -136,7 +168,11 @@ public class ExStream<T> implements Stream<T> {
         return CharStream.of(string);
     }
 
+    //**************** String ****************//
 
+    public static CharSequenceStream ofString(String s){
+        return CharSequenceStream.ofCharSequence(s);
+    }
 
 
 
@@ -150,11 +186,34 @@ public class ExStream<T> implements Stream<T> {
         return ByteStream.of(stream.mapToInt(t -> (int) toByte.apply(t)));
     }
 
+    public CharSequenceStream mapToCharSequence(Function<T, ? extends CharSequence> toString){
+        return CharSequenceStream.ofCharSequence(stream.map(toString));
+    }
+
+    public StringStream mapToString(Function<T, ? extends String> toString){
+        return StringStream.ofString(stream.map(toString));
+    }
 
 
 
 
     //**************** 简化用的方法 ****************//
+
+    public void forEachSysOut(){
+        this.forEach(System.out::println);
+    }
+
+    public void forEachSysErr(){
+        this.forEach(System.out::println);
+    }
+
+    public void forEachPrint(PrintStream printStream){
+        this.forEach(printStream::print);
+    }
+
+    public void forEachPrintln(PrintStream printStream){
+        this.forEach(printStream::println);
+    }
 
     /**
      * 转为list

@@ -3,11 +3,9 @@ package com.forte.utils.file;
 import com.forte.utils.stream.CharStream;
 import com.forte.utils.stream.StringStream;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.*;
-import java.util.NoSuchElementException;
-import java.util.PrimitiveIterator;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
 /**
@@ -34,18 +32,78 @@ public class ExFileUtils {
     }
 
 
+    /**
+     * 将字符流写入文件
+     * @param file  文件对象
+     * @param chars 字符流
+     * @throws IOException
+     */
     public static void write(File file, CharStream chars) throws IOException {
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
+        createFile(file);
+
+        try (
+                FileWriter out = new FileWriter(file);
+                BufferedWriter writer = new BufferedWriter(out)
+        ) {
+            writer.write(chars.toCharArray());
         }
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-        writer.write(chars.toCharArray());
-        writer.flush();
-        writer.close();
+
     }
 
+    /**
+     * 将行写入文件
+     * @param file  文件对象
+     * @param lines 行数据
+     * @throws IOException
+     */
+    public static void write(File file, String... lines) throws IOException {
+        createFile(file);
 
+        try (
+                FileWriter out = new FileWriter(file);
+                BufferedWriter writer = new BufferedWriter(out)
+        ) {
+            for (int i = 0; i < lines.length; i++) {
+                if (i > 0) {
+                    writer.newLine();
+                }
+                writer.write(lines[i]);
+            }
+        }
+
+    }
+
+    /**
+     * 将行写入文件
+     * @param file  文件对象
+     * @param lines 行数据
+     * @throws IOException
+     */
+    public static void write(File file, Collection<String> lines) throws IOException {
+        createFile(file);
+
+        try (
+                FileWriter out = new FileWriter(file);
+                BufferedWriter writer = new BufferedWriter(out)
+        ) {
+            int i = 0;
+            for (String line : lines) {
+                if (i > 0) {
+                    writer.newLine();
+                }
+                writer.write(line);
+                i++;
+            }
+        }
+    }
+
+    /**
+     * 读取文件的char流对象
+     * 效率情况不是很乐观，遍历全部字符的速度是BufferedReader的lines流遍历所有行数据的3倍。
+     * @param file  文件对象
+     * @return
+     * @throws IOException
+     */
     public static CharStream getChars(File file) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
 
@@ -87,6 +145,40 @@ public class ExFileUtils {
                         iter, Spliterator.ORDERED | Spliterator.NONNULL), false)
         );
     }
+
+    /**
+     * 如果文件不存在，创建一个新文件
+     * @param file 文件对象
+     * @return  是否创建
+     * @throws IOException
+     */
+    public static boolean createFile(File file) throws IOException {
+        return !file.exists() && (file.getParentFile().mkdirs() && file.createNewFile());
+    }
+
+    /**
+     * 获取主文件夹，例如window的桌面等
+     * @return
+     */
+    public static File getHomeDirectory(){
+        return getFileSystemView().getHomeDirectory();
+    }
+
+    /**
+     * 获取文件在系统中的名称
+     * @param file 文件对象
+     */
+    public static String getFileDisplayName(File file){
+        return getFileSystemView().getSystemDisplayName(file);
+    }
+
+    /**
+     * 获取{@link FileSystemView} 对象
+     */
+    public static FileSystemView getFileSystemView(){
+        return FileSystemView.getFileSystemView();
+    }
+
 
 
 }

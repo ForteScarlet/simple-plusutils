@@ -1168,7 +1168,7 @@ public class FieldUtils {
         Objects.requireNonNull(child, "the first parameter [child] can not be null");
         Objects.requireNonNull(findFather, "the second parameter [findFather] can not be null");
         //如果自身就是这个类，直接返回true
-        if (child.equals(findFather)) {
+        if (child == findFather || child.equals(findFather)) {
             return true;
         }
 

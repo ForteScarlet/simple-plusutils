@@ -2,12 +2,20 @@ package com.forte.utils.chinese.chinesenumber;
 
 
 import com.forte.utils.chinese.chinesenumber.formatter.*;
+import com.forte.utils.reflect.FieldUtils;
+import com.forte.utils.reflect.MethodUtil;
 
+import javax.script.ScriptException;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
+
+import static com.forte.utils.chinese.chinesenumber.CNumberList.*;
 
 /**
  * 对外接口类
+ *
  * @author ForteScarlet <[163邮箱地址]ForteScarlet@163.com>
  * @date Created in 2019/4/16 10:16
  * @since JDK1.8
@@ -36,10 +44,23 @@ public class CNumberUtil implements CNumberList {
         boolean isPoint = false;
 
         for (int i = 0; i < chars.length; i++) {
-            String c = chars[i] + "";
-            //如果有任意字符不存在于中文数字数组中，报错
+            char ci = chars[i];
+            String c = ci + "";
+            //如果有任意字符不存在于中文数字数组中, 尝试转化为汉字字符，如果无法转化，抛出异常
             if (!list.contains(c)) {
-                throw new RuntimeException(new NumberFormatException("存在非汉字数字:" + c));
+                String toC = tryToC(ci);
+                if (toC == null) {
+                    // 获取索引位置的值
+                    String indexOf = Stream.iterate(0, index -> index += 1)
+                            .limit(i)
+                            .map(s -> " ")
+                            .reduce((old, val) -> old += val).orElse("") + '^';
+
+                    throw new RuntimeException(new NumberFormatException("存在非汉字数字:" + c + "; index: " + i + "\n" +
+                            chinese + "\n" + indexOf));
+                } else {
+                    c = toC;
+                }
             }
 
             //如果首位为负数标识
@@ -69,6 +90,115 @@ public class CNumberUtil implements CNumberList {
         return parseAndFormat(ch, isNegative, isPoint);
     }
 
+
+    /**
+     * 解析可能存在运算符的中文字符并计算结果 <br>
+     * 假如结果是布尔值，则true:1，false:0 <br>
+     *
+     */
+    public static CNumber toCalculation(String chinese) throws ScriptException {
+        //先进行转化
+        chinese = replaceOperators(chinese);
+        //当前字符串拼接
+        StringBuilder str = new StringBuilder();
+        //结果集拼接
+        StringBuilder numberAppend = new StringBuilder();
+        chinese.chars().forEach(ci -> {
+            char c = (char) ci;
+            if (isOperators(c)) {
+                //如果是运算符，结束拼接并尝试进行转化
+                if (str.length() > 0) {
+                    numberAppend.append(toNumber(str.toString()));
+                }
+                numberAppend.append(c);
+                //清空
+                str.delete(0, str.length());
+            } else {
+                //是非运算符
+                str.append(c);
+            }
+        });
+        if (str.length() > 0) {
+            numberAppend.append(toNumber(str.toString()));
+        }
+
+        Object eval = MethodUtil.eval(numberAppend.toString());
+        //判断其类型
+        if (FieldUtils.isChild(eval.getClass(), Boolean.class)) {
+            // 如果是布尔值，返回布尔类型值
+            return parseToCNumber((Boolean) eval);
+        }
+        //是否为浮点
+        boolean isFl = false;
+        //是否为负数
+        boolean isNa = false;
+
+        if (FieldUtils.isChild(eval.getClass(), java.lang.Number.class)) {
+            Number evalNumber = (Number) eval;
+            if (evalNumber.longValue() < 0) {
+                isNa = true;
+            }
+
+            if (
+                    eval.getClass().equals(java.lang.Float.class) ||
+                            eval.getClass().equals(java.lang.Double.class)
+            ) {
+                //是个浮点数
+                isFl = true;
+            }
+            return parseToCNumber(evalNumber, isFl, isNa);
+        }
+
+
+        if (FieldUtils.isBasic(eval.getClass())) {
+            // 是基础数据类型
+            if (
+                    eval.getClass().equals(short.class) ||
+                            eval.getClass().equals(int.class) ||
+                            eval.getClass().equals(byte.class)
+            ) {
+                int evalVal = (int) eval;
+                return parseToCNumber(evalVal, false, evalVal < 0);
+            } else if (eval.getClass().equals(long.class)) {
+                long evalVal = (long) eval;
+                return parseToCNumber(evalVal, false, evalVal < 0);
+            } else if (eval.getClass().equals(double.class)) {
+                double evalVal = (double) eval;
+                return parseToCNumber(evalVal, true, evalVal < 0);
+            } else if (eval.getClass().equals(float.class)) {
+                float evalVal = (float) eval;
+                return parseToCNumber(evalVal, true, evalVal < 0);
+            } else {
+                //最后一个基础数据类型： char
+                char evalVal = (char) eval;
+                return new CNumber<>(Character.toString(evalVal), (int) evalVal, false, false, new BigDecimal(String.valueOf((int) evalVal)));
+            }
+        }
+
+        // 不是基础数据类型、不是Number类型、不是boolean类型，抛出异常
+        throw new NumberFormatException("无法将结果转化为" + CNumber.class + ": " + eval);
+    }
+
+
+    /**
+     * 将一个数字类型转化为CNumber类型
+     *
+     * @param number number对象
+     */
+    private static <T extends Number> CNumber<T> parseToCNumber(T number, boolean isFloat, boolean negative) {
+        String numVal = String.valueOf(number);
+        return new CNumber<>(numVal, number, isFloat, negative, new BigDecimal(numVal));
+    }
+
+    /**
+     * 将一个布尔值类型转化为CNumber类型
+     * true:1 , false:0
+     *
+     * @param booleanVal 布尔值
+     */
+    private static CNumber<Integer> parseToCNumber(boolean booleanVal) {
+        return CNumber.ofBooleanNumber(booleanVal);
+    }
 
     /**
      * 解析汉字字符，判断数字长度并进行分配
@@ -112,7 +242,7 @@ public class CNumberUtil implements CNumberList {
             String join = String.join("", chineseArray);
             int indexOf = join.indexOf("亿");
             boolean moreThan10 = false;
-            if(indexOf >= 0){
+            if (indexOf >= 0) {
                 String substring = join.substring(0, indexOf);
                 moreThan10 = C2N_10_UP.entrySet().stream().filter(e -> e.getValue() >= C2N_10_UP.get("十")).anyMatch(e -> substring.contains(e.getKey()));
             }

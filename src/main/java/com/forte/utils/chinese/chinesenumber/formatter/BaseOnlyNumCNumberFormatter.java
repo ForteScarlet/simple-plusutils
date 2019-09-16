@@ -1,6 +1,10 @@
 package com.forte.utils.chinese.chinesenumber.formatter;
 
+import com.forte.utils.chinese.chinesenumber.CNumberList;
+
 import java.math.BigDecimal;
+
+import static com.forte.utils.chinese.chinesenumber.CNumberList.*;
 
 /**
  * 不会出现十位类型的解析

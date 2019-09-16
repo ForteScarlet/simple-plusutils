@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 /**
  * 静态资源类
+ *
  * @author ForteScarlet <[163邮箱地址]ForteScarlet@163.com>
  * @date Created in 2019/4/16 11:49
  * @since JDK1.8
@@ -15,7 +16,7 @@ public interface CNumberList {
     /**
      * 0-9汉字对应数字
      */
-    Map<String, Integer> C2N_0_9 = new HashMap<String, Integer>() {{
+    Map<String, Integer> C2N_0_9 = new HashMap<String, Integer>(24) {{
         put("〇", 0);
         put("零", 0);
         put("一", 1);
@@ -43,9 +44,26 @@ public interface CNumberList {
     }};
 
     /**
+     * 0-9对应的汉字和小数点
+     */
+    Map<Character, String> N2C_0_9_POINT = new HashMap<Character, String>(16) {{
+        put('1', "一");
+        put('2', "二");
+        put('3', "三");
+        put('4', "四");
+        put('5', "五");
+        put('6', "六");
+        put('7', "七");
+        put('8', "八");
+        put('9', "九");
+        put('0', "零");
+        put('.', "点");
+    }};
+
+    /**
      * 0-9汉字对应数字
      */
-    Map<String, Integer> C2N_ONLY_0_9 = new HashMap<String, Integer>() {{
+    Map<String, Integer> C2N_ONLY_0_9 = new HashMap<String, Integer>(24) {{
         put("〇", 0);
         put("零", 0);
         //可能会使用此说法
@@ -77,7 +95,7 @@ public interface CNumberList {
     /**
      * 10以上的倍数
      */
-    Map<String, Long> C2N_10_UP = new HashMap<String, Long>() {{
+    Map<String, Long> C2N_10_UP = new HashMap<String, Long>(24) {{
         put("十", 10L);
         put("拾", 10L);
         put("廿", 20L);
@@ -99,17 +117,48 @@ public interface CNumberList {
         put("十亿", 1000000000L);
         put("百亿", 10000000000L);
         put("千亿", 100000000000L);
-        put("兆",    1000000000L);
+        put("兆", 1000000000L);
         put("十兆", 100000000000L);
         put("百兆", 10000000000000L);
         put("千兆", 1000000000000000L);
     }};
 
 
-    /** 负数汉字 */
+    Map<String, Character> OPERATOR = new HashMap<String, Character>(24) {{
+        put("加", '+');
+        put("加上", '+');
+        put("减", '-');
+        put("减去", '-');
+        put("乘", '*');
+        put("乘以", '*');
+        put("除", '/');
+        put("除以", '/');
+        put("与", '&');
+        put("异或", '^');
+        put("或", '|');
+        put("非", '~');
+        put("（", '(');
+        put("）", ')');
+        put("！", '!');
+        put("？", '?');
+        put("“", '\"');
+        put("”", '\"');
+    }};
+
+    char[] OPERATOR_ARRAY = {
+            '!', '%', '^', '&', '*',
+            '(', ')', '-', '+', '=',
+            '/', '.', '<', '>', '?'
+    };
+
+    /**
+     * 负数汉字
+     */
     String NEGATIVE = "负";
 
-    /** 小数标识 */
+    /**
+     * 小数标识
+     */
     String POINT = "点";
 
     /**
@@ -118,24 +167,59 @@ public interface CNumberList {
     //{"〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖", "弌", "弍", "弎", "十", "二十", "三十", "四十", "百", "皕", "千", "万", "亿", "拾", "廿", "卅", "卌", "佰", "仟", "点", "负"};
     String[] CHINESE_NUMS = Stream.concat(Stream.concat(C2N_ONLY_0_9.keySet().stream(), C2N_10_UP.keySet().stream()), Stream.of(NEGATIVE, POINT)).toArray(String[]::new);
 
-    default boolean is0_9(String s){
-       return C2N_0_9.keySet().contains(s);
+    /**
+     * 全部运算符
+     */
+    String[] OPERATORS = OPERATOR.keySet().toArray(new String[0]);
+
+    static boolean is0_9(String s) {
+        return C2N_0_9.keySet().contains(s);
     }
 
-    default boolean is10(String s){
+    static boolean is10(String s) {
         return C2N_10_UP.keySet().contains(s);
     }
 
-    default boolean isOnly0_9(String s){
+    static boolean isOnly0_9(String s) {
         return C2N_ONLY_0_9.keySet().contains(s);
     }
 
-    default Integer get0_9Num(String c){
+    static Integer get0_9Num(String c) {
         return C2N_0_9.getOrDefault(c, C2N_ONLY_0_9.get(c));
     }
 
-    default Long get10Num(String c){
+    static Long get10Num(String c) {
         return C2N_10_UP.get(c);
     }
 
+    /**
+     * 尝试将疑似数字字符的值替换为汉字，如果没有则返回null
+     * 0-9或小数点
+     */
+    static String tryToC(char c) {
+        return N2C_0_9_POINT.getOrDefault(c, null);
+    }
+
+    /**
+     * 将所有中文运算符转化为普通运算符
+     */
+    static String replaceOperators(String s) {
+        String result = s;
+        for (Map.Entry<String, Character> entry : OPERATOR.entrySet()) {
+            result = result.replaceAll(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+        return result;
+    }
+
+    /**
+     * 判断一个字符是否为某个运算符
+     */
+    static boolean isOperators(char c) {
+        for (char opc : OPERATOR_ARRAY) {
+            if (opc == c) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

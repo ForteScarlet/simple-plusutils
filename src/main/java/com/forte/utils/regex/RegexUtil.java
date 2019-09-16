@@ -1,13 +1,14 @@
 package com.forte.utils.regex;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import com.forte.utils.collections.ExSimpleIterator;
+import com.forte.utils.stream.ExStream;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 正则表达式工具类
@@ -147,10 +148,34 @@ public class RegexUtil {
     }
 
     /**
+     * 切割出匹配正则的字符串流对象
+     */
+    public static Stream<String> getSplitStream(String source, Pattern pattern){
+        /*
+            Pattern： 一个Pattern是一个正则表达式经编译后的表现模式。
+            Matcher： 一个Matcher对象是一个状态机器，它依据Pattern对象做为匹配模式对字符串展开匹配检查。
+         */
+        Matcher matcher = pattern.matcher(source);
+        //记录匹配的数量并创建数组
+        List<String> end = new ArrayList<>();
+        //构建迭代器对象
+        Iterator<String> iter = new ExSimpleIterator<>(matcher::find, matcher::group);
+        //通过迭代器构建Stream对象
+        return ExStream.byIter(iter);
+    }
+
+    /**
      * 切割出匹配正则的字符串列表
      */
     public static List<String> getSplit(String source, String regex) {
         return getSplit(source, getPattern(regex));
+    }
+
+    /**
+     * 切割出匹配正则的字符串列表
+     */
+    public static Stream<String> getSplitStream(String source, String regex) {
+        return getSplitStream(source, getPattern(regex));
     }
 
     /**

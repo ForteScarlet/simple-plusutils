@@ -156,8 +156,6 @@ public class RegexUtil {
             Matcher： 一个Matcher对象是一个状态机器，它依据Pattern对象做为匹配模式对字符串展开匹配检查。
          */
         Matcher matcher = pattern.matcher(source);
-        //记录匹配的数量并创建数组
-        List<String> end = new ArrayList<>();
         //构建迭代器对象
         Iterator<String> iter = new ExSimpleIterator<>(matcher::find, matcher::group);
         //通过迭代器构建Stream对象

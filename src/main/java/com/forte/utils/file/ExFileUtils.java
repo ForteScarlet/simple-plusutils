@@ -1,5 +1,6 @@
 package com.forte.utils.file;
 
+import com.forte.utils.basis.ExStringUtils;
 import com.forte.utils.stream.CharStream;
 import com.forte.utils.stream.StringStream;
 
@@ -177,6 +178,84 @@ public class ExFileUtils {
      */
     public static FileSystemView getFileSystemView(){
         return FileSystemView.getFileSystemView();
+    }
+
+    /** 创建临时文件时候文件名的最小长度 */
+    private static final int TMP_FILE_THE_SMALLEST_LENGTH = 3;
+
+    private static final char TMP_NAME_SUPPLEMENT_CHAR = '_';
+
+    /**
+     * 获取一个临时文件
+     * @param prefix        文件名前半部分，如果长度不足3则用'_'(下划线)进行补全
+     * @param suffix        文件名后半部分，如果为null则默认为.tmp, nullable
+     * @param directory     指定一个腹肌文件夹，nullable
+     * @param deleteOnExit  是否在程序结束之后删除此文件, 默认不删除
+     * @return 临时文件
+     * @throws IOException
+     */
+    public static File getTempFile(String prefix, String suffix, File directory, boolean deleteOnExit) throws IOException {
+        // 如果不足最小长度，补足至最小长度
+        if(prefix.length() < TMP_FILE_THE_SMALLEST_LENGTH){
+            prefix += ExStringUtils.repeat(TMP_NAME_SUPPLEMENT_CHAR, TMP_FILE_THE_SMALLEST_LENGTH - prefix.length());
+        }
+        File tempFile = File.createTempFile(prefix, suffix, directory);
+        if(deleteOnExit){
+            tempFile.deleteOnExit();
+        }
+        return tempFile;
+    }
+
+    /**
+     * @see #getTempFile(String, String, File, boolean)
+     */
+    public static File getTempFile(String fileName, File directory, boolean deleteOnExit) throws IOException {
+        int i = fileName.lastIndexOf('.');
+        String prefix, suffix;
+        if(i > -1){
+            prefix = fileName.substring(0, i);
+            suffix = fileName.substring(i+1);
+        }else{
+            prefix = fileName;
+            suffix = null;
+        }
+        return getTempFile(prefix, suffix, directory, deleteOnExit);
+    }
+
+    /**
+     * @see #getTempFile(String, String, File, boolean)
+     */
+    public static File getTempFile(String fileName, boolean deleteOnExit) throws IOException {
+        return getTempFile(fileName, (File) null, deleteOnExit);
+    }
+
+    /**
+     * @see #getTempFile(String, String, File, boolean)
+     */
+    public static File getTempFile(String fileName, File directory) throws IOException {
+        return getTempFile(fileName, directory, false);
+    }
+
+
+    /**
+     * @see #getTempFile(String, String, File, boolean)
+     */
+    public static File getTempFile(String prefix, String suffix, boolean deleteOnExit) throws IOException {
+        return getTempFile(prefix, suffix, null, deleteOnExit);
+    }
+
+    /**
+     * @see #getTempFile(String, String, File, boolean)
+     */
+    public static File getTempFile(String prefix, String suffix, File directory) throws IOException {
+        return getTempFile(prefix, suffix, directory, false);
+    }
+
+    /**
+     * @see #getTempFile(String, String, File, boolean)
+     */
+    public static File getTempFile(String prefix, String suffix) throws IOException {
+        return getTempFile(prefix, suffix, null, false);
     }
 
 

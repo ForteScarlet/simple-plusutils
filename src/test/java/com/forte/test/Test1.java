@@ -17,20 +17,28 @@ public class Test1 {
 
     public static void main(String[] args) throws Exception {
 
-        String name = "newInstance";
-        TestEm newEm = EnumUtils.newEnum(TestEm.class, name, (Supplier<String>) () -> "我是被之后创建出来的！");
+//        String name = "newInstance";
+//
+//        long s = System.currentTimeMillis();
+//
+//        for (int i = 0; i < 100; i++) {
+//            TestEm testEm = EnumUtils.newEnum(TestEm.class, name + i, (Supplier<String>) () -> "我是被之后创建出来的！");
+////            System.out.println(testEm.ordinal());
+//        }
+//
+//        long e = System.currentTimeMillis();
+//
+//        System.out.println((e - s) + "ms");
+//
+//        TestEm[] values = EnumUtils.values(TestEm.class, TestEm[]::new);
+//        System.out.println("values.length: " + values.length);
+//        System.out.println(values[0]);
 
-        System.out.println(newEm);
-        System.out.println(newEm.sup.get());
+        Integer[] a = {0,1,2,3,4,5,6,7,8,9};
+        int i = 5;
+        Integer[] integers = Arrays.stream(a).skip(i).limit(1).toArray(Integer[]::new);
+        System.out.println(Arrays.toString(integers));
 
-        TestEm x = TestEm.valueOf(name);
-        System.out.println(x);
-
-        System.out.println(x == newEm);
-
-        System.out.println(x.ordinal());
-
-        System.out.println(Arrays.toString(TestEm.values()));
 
     }
 }

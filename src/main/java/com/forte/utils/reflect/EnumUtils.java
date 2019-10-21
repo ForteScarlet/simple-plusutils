@@ -3,18 +3,12 @@ package com.forte.utils.reflect;
 import com.forte.utils.function.ExFunction;
 import sun.reflect.ConstructorAccessor;
 
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
 
 /**
  *
@@ -73,6 +67,7 @@ public class EnumUtils {
                 try {
                     Object[] valuesArray = (Object[]) values.invoke(null);
                     ordinalAtomic = new AtomicInteger(valuesArray == null ? 0 : valuesArray.length + 1);
+                    enumOrdinalRecord.put(et, ordinalAtomic);
                 } catch (Exception e) {
                     throw new RuntimeException("方法values执行失败！", e);
                 }
@@ -150,12 +145,53 @@ public class EnumUtils {
             }else{
                 throw new RuntimeException("无法定位到参数数量为"+ args.length + 2 +"的构造方法：寻找到"+ constructors.length +"个");
             }
+        }
+    }
 
+    /**
+     * 获取枚举的全部实例
+     * 由于原生的values属于final字段无法修改，于是从此处提供一个方法获取values值
+     * 为了使得效果与原生values一致，会进行排序
+     * @param t     枚举类型
+     * @return      枚举全部实例
+     */
+    public static <T extends Enum<T>> T[] values(Class<T> t, IntFunction<T[]> initArray) {
+        EnumValueOfResource<T> resource = enumValueOfResourceMap.get(t);
+        if(resource == null){
+            // 执行values方法
+            try {
+                return (T[]) EnumNewInstanceResource._enumValuesMethodFunction.apply(t).invoke(null);
+            }catch (Exception e){
+                return null;
+            }
+        }else{
+            return resource.enumConstantDirectory.values().stream().sorted().toArray(initArray);
+        }
+    }
 
+    /**
+     * 获取某个索引下的
+     * @param t
+     * @param index
+     * @param <T>
+     * @return
+     */
+    public static <T extends Enum<T>> T valueIndexOf(Class<T> t, int index){
+        EnumValueOfResource<T> resource = enumValueOfResourceMap.get(t);
+        if(resource == null){
+            // 执行values方法
+            try {
+                return ((T[]) EnumNewInstanceResource._enumValuesMethodFunction.apply(t).invoke(null))[index];
+            }catch (Exception e){
+                return null;
+            }
+        }else{
+            // 有， 截取
+            return resource.enumConstantDirectory.values().stream().sorted().skip(index).limit(1).findFirst().orElse(null);
         }
 
-
     }
+
 
 
 

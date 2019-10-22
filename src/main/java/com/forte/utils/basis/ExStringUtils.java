@@ -203,7 +203,6 @@ public class ExStringUtils extends CharSequenceUtils {
      * - c
      * - bc
      * </code>
-     *
      * @param list 元素列表
      */
     public static <T> List<List<T>> getCombinations(List<T> list) {
@@ -234,7 +233,6 @@ public class ExStringUtils extends CharSequenceUtils {
      * - c
      * - bc
      * </code>
-     *
      * @param list 元素列表
      */
     public static <T> List<List<T>> getCombinations(T... list) {
@@ -253,6 +251,7 @@ public class ExStringUtils extends CharSequenceUtils {
         }
         return result;
     }
+
 
 
 }

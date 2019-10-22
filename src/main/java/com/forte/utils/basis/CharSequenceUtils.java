@@ -65,34 +65,26 @@ public class CharSequenceUtils {
      * 转化为{@link StringBuilder}
      */
     public static StringBuilder toBuilder(CharSequence s){
-        StringBuilder b = new StringBuilder();
-        foreach(b::append, s);
-        return b;
+        return new StringBuilder(s);
     }
     /**
      * 转化为{@link StringBuilder}
      */
     public static StringBuilder toBuilder(int init, CharSequence s){
-        StringBuilder b = new StringBuilder(init);
-        foreach(b::append, s);
-        return b;
+        return new StringBuilder(init).append(s);
     }
     /**
      * 转化为{@link StringBuilder}
      */
     public static StringBuilder toBuilder(String init, CharSequence s){
-        StringBuilder b = new StringBuilder(init);
-        foreach(b::append, s);
-        return b;
+        return new StringBuilder(init).append(s);
     }
 
     /**
-     * 转化为{@link StringBuilder}
+     * transform into{@link StringBuilder}
      */
     public static StringBuilder toBuilder(CharSequence init, CharSequence s){
-        StringBuilder b = new StringBuilder(init);
-        foreach(b::append, s);
-        return b;
+        return new StringBuilder(init).append(s);
     }
 
 

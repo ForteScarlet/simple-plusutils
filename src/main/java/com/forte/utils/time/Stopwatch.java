@@ -1,4 +1,4 @@
-package com.forte.utils.basis;
+package com.forte.utils.time;
 
 import java.util.function.Function;
 
@@ -20,6 +20,7 @@ import java.util.function.Function;
  *     System.out.println("时间差: " + sp);
  * </code>
  *
+ * 秒表
  *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8

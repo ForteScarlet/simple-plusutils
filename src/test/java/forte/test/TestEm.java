@@ -1,4 +1,4 @@
-package com.forte.test;
+package forte.test;
 
 import java.util.function.Supplier;
 

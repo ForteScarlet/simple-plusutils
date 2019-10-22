@@ -91,38 +91,41 @@ public class ExStringUtils extends CharSequenceUtils {
 
     /**
      * 将一个字符串等量的复制n倍长度<br>
-     * 以下为多种方案：
-     * <code>
-     *  String.format("%0" + 5 + "d", 0).replace("0", "aaabc");
-     *  <p>
-     *  String.join("", Collections.nCopies(5, "aaabc"));
-     *  <p>
-     *  new String(new char[5]).replace("\0", "aaabc");
-     *  <p>
-     *  repeatString("aaabc", 5, "");//见后面的方法
-     *  <p>
-     *  执行次数1000_000
-     *  <p>
-     *  耗时毫秒
-     *  1797
-     *  167
-     *  593
-     *  142
-     *  根据前面的几位大佬进行总结和测试，相对而言，2和4的耗时比较少，多次测试的结果4都比2用时更少一点。
-     *  注重性能就选择2或4
-     *  public static String repeatString(String str, int n, String seg) {
-     *  StringBuffer sb = new StringBuffer();
-     *  for (int i = 0; i < n; i++) {
-     *  sb.append(str).append(seg);
-     *  }
-     *  return sb.substring(0, sb.length() - seg.length());
-     *  }
-     * </code>
+     *
      *
      * @param base 要复制的字符串
      */
     public static String repeat(String base, int times) {
-        // 方法一 通过java8的Collections.nCopies方法创建一个重复List并合并。
+        /*
+                以下为多种方案：
+             * <code>
+             *  String.format("%0" + 5 + "d", 0).replace("0", "aaabc");
+             *  <p>
+             *  String.join("", Collections.nCopies(5, "aaabc"));
+             *  <p>
+             *  new String(new char[5]).replace("\0", "aaabc");
+             *  <p>
+             *  repeatString("aaabc", 5, "");//见后面的方法
+             *  <p>
+             *  执行次数1000_000
+             *  <p>
+             *  耗时毫秒
+             *  1797
+             *  167
+             *  593
+             *  142
+             *  根据前面的几位大佬进行总结和测试，相对而言，2和4的耗时比较少，多次测试的结果4都比2用时更少一点。
+             *  注重性能就选择2或4
+             *  public static String repeatString(String str, int n, String seg) {
+             *  StringBuffer sb = new StringBuffer();
+             *  for (int i = 0; i < n; i++) {
+             *  sb.append(str).append(seg);
+             *  }
+             *  return sb.substring(0, sb.length() - seg.length());
+             *  }
+             * </code>
+         */
+
         return String.join("", Collections.nCopies(times, base));
     }
 

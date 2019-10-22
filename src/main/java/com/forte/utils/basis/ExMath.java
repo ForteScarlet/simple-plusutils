@@ -5,6 +5,9 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 /**
+ *
+ * 数学扩展工具类
+ *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/

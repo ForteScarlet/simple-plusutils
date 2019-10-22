@@ -1338,11 +1338,12 @@ public class FieldUtils {
      * @author ForteScarlet
      * @deprecated 有方法直接获取的: {@link Class#getSimpleName()}
      */
-    @Deprecated
+//    @Deprecated
     public static String getClassName(Class<?> c) {
-        String name = c.getName();
-        String[] split = name.split("\\.");
-        return split[split.length - 1];
+//        String name = c.getName();
+//        String[] split = name.split("\\.");
+//        return split[split.length - 1];
+        return c.getSimpleName();
     }
 
     /**

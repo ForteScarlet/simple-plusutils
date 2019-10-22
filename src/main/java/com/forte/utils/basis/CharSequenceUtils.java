@@ -34,7 +34,13 @@ public class CharSequenceUtils {
         return ((st > 0) || (len < s.length())) ? s.subSequence(st, len) : s;
     }
 
-
+    /**
+     * 是否为空或者null<br>
+     * 此处如果仅空字符也会被当作empty<br>
+     *     即会进行trim操作
+     * @param s
+     * @return
+     */
     public static boolean isEmpty(CharSequence s){
         if(s == null){
             return true;
@@ -42,7 +48,11 @@ public class CharSequenceUtils {
         return trim(s).length() == 0;
     }
 
-
+    /**
+     * 遍历所有字符
+     * @param consumer 遍历操作
+     * @param s         每一个字符
+     */
     public static void foreach(CharConsumer consumer, CharSequence s){
         s.chars().forEach(consumer);
     }

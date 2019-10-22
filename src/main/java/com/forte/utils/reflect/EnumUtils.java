@@ -3,9 +3,14 @@ package com.forte.utils.reflect;
 import com.forte.utils.function.ExFunction;
 import sun.reflect.ConstructorAccessor;
 
-import java.lang.reflect.*;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
@@ -13,6 +18,22 @@ import java.util.function.*;
 /**
  *
  * 枚举工具类
+ *
+ * <br>
+ *
+ * 通过反射的方式创建一个新的枚举类实例，并且可以通过valueOf方法获取到。<br>
+ * 但是无法通过原本的values方法直接获取，（毕竟values方法获取的是final类型的数组，无法变更）<br>
+ * 如果在创建后想要完整的values结果可以通过此类{@link EnumUtils} 中的values方法获取。<br>
+ * 枚举内部的排序字段也会同时递增。<br>
+ * <i>
+ *  由于使用了深反射以绕过枚举类实例化检测，所以整个流程或多或少存在安全问题。
+ * </i>
+ *  <i>
+ *      而关于性能问题，此类在初始化的时候会提前缓存所需要的资源，相对而言不会频繁使用反射，所以性能相对还是不会太低的。
+ *      测试中：
+ *      创建 100_0000 个枚举的新实例用时1s左右
+ *      创建 1000_0000 个枚举的新实例用时22620 ms左右
+ *  </i>
  *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
@@ -127,6 +148,16 @@ public class EnumUtils {
         return newEnum(enumType, name, new Class<?>[0], new Object[0]);
     }
 
+    /**
+     * 创建一个枚举新实例，会根据枚举构造参数数量尝试寻找唯一对应的构造。
+     * 找不到或者有多个会抛出异常。
+     * @param enumType  枚举类型
+     * @param name      枚举名称
+     * @param args      枚举的构造参数
+     * @return
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     */
     public static <T extends Enum<T>> T newEnum(Class<T> enumType, String name, Object... args) throws NoSuchMethodException, IllegalAccessException {
         if(args == null || args.length == 0){
             return newEnum(enumType, name);
@@ -162,19 +193,52 @@ public class EnumUtils {
             try {
                 return (T[]) EnumNewInstanceResource._enumValuesMethodFunction.apply(t).invoke(null);
             }catch (Exception e){
-                return null;
+                throw new RuntimeException("invoke Enum method 'values' failed ", e);
             }
         }else{
             return resource.enumConstantDirectory.values().stream().sorted().toArray(initArray);
         }
     }
 
+
+    /**
+     * 通过枚举的类型获取这个枚举类型的成员Map
+     * 会进行copy
+     * @param enumType  枚举类型
+     * @return          枚举内部全部成员对应键值对
+     */
+    public static <T extends Enum<T>> Map<String, T> getEnumConstantDirectory(Class<T> enumType) throws IllegalAccessException {
+            return new HashMap<>(getEnumValueOfResource(enumType).enumConstantDirectory);
+    }
+
+
+
+
+
+    /**
+     * 获取枚举元素资源封装类
+     * @param enumType  枚举类型
+     * @return  枚举元素值封装类
+     * @throws IllegalAccessException
+     */
+    private static <T extends Enum<T>> EnumValueOfResource<T> getEnumValueOfResource(Class<T> enumType) throws IllegalAccessException {
+        // 先看看是否存在此name的枚举
+        EnumValueOfResource<T> enumValueOfResource = enumValueOfResourceMap.get(enumType);
+        if(enumValueOfResource == null){
+            // 如果没有，则实例化并保存
+            enumValueOfResource = new EnumValueOfResource<>(enumType);
+            enumValueOfResourceMap.put(enumType, enumValueOfResource);
+        }
+
+        return enumValueOfResource;
+    }
+
+
     /**
      * 获取某个索引下的
-     * @param t
-     * @param index
-     * @param <T>
-     * @return
+     * @param t     枚举类型
+     * @param index 索引位
+     * @return      该索引位下的枚举元素
      */
     public static <T extends Enum<T>> T valueIndexOf(Class<T> t, int index){
         EnumValueOfResource<T> resource = enumValueOfResourceMap.get(t);
@@ -183,7 +247,7 @@ public class EnumUtils {
             try {
                 return ((T[]) EnumNewInstanceResource._enumValuesMethodFunction.apply(t).invoke(null))[index];
             }catch (Exception e){
-                return null;
+                throw new RuntimeException("invoke Enum method 'values' failed ", e);
             }
         }else{
             // 有， 截取
@@ -196,7 +260,7 @@ public class EnumUtils {
 
 
     /**
-     * 枚举实例化工具， 内部提前拿取所需资源
+     * 枚举实例化所需资源， 内部提前拿取所需资源
      */
     static class EnumNewInstanceResource {
 
@@ -320,7 +384,7 @@ public class EnumUtils {
                     }
                 };
 
-                // 实例对象获取一条龙
+                // 实例对象获取一条龙服务
                 _newInstance = (c, args) -> {
                     // 通过构造获取 ConstructorAccessor 对象
                     ConstructorAccessor constructorAccessor = _constructorAccessorCreator.apply(c);
@@ -334,13 +398,7 @@ public class EnumUtils {
         }
 
         public static synchronized <T extends Enum<T>> T newEnumInstance(Class<T> type, Constructor<T> constructor, String name, Object[] args) throws IllegalAccessException {
-            // 先看看是否存在此name的枚举
-            EnumValueOfResource<T> enumValueOfResource = enumValueOfResourceMap.get(type);
-            if(enumValueOfResource == null){
-                // 如果没有，则实例化并保存
-                enumValueOfResource = new EnumValueOfResource<>(type);
-                enumValueOfResourceMap.put(type, enumValueOfResource);
-            }
+            EnumValueOfResource<T> enumValueOfResource = getEnumValueOfResource(type);
 
             // 判断name是否已经存在
             if(enumValueOfResource.enumConstantDirectory.containsKey(name)){
@@ -370,7 +428,9 @@ public class EnumUtils {
      * enumConstants字段
      */
     static class EnumValueOfResource<T extends Enum<T>> {
+        /** 枚举真正的对象 */
         private Class<T> enumType;
+        /** 此Map控制着对应枚举类的valueOf方法 */
         private Map<String, T> enumConstantDirectory;
 
         // 此字段似乎仅使用过一次以用于初始化上面那个字段，所以暂时先不获取它了
@@ -388,6 +448,28 @@ public class EnumUtils {
 
             // 然后获取两个参数
             enumConstantDirectory = ( Map<String, T>) EnumNewInstanceResource._Class_enumConstantDirectory.get(enumType);
+        }
+
+        @Override
+        public String toString(){
+            return "{Resource for ["+ enumType +"]}";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            EnumValueOfResource<?> that = (EnumValueOfResource<?>) o;
+            return enumType.equals(that.enumType);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(enumType);
         }
     }
 

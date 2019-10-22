@@ -16,6 +16,7 @@ public class StringListReader extends Reader {
     private final List<Character> charArr;
 
     //当前所在索引,默认从0开始
+
     private int index = 0;
 
     /** 是否关闭 */

@@ -23,9 +23,8 @@ import static com.forte.utils.chinese.chinesenumber.CNumberList.*;
 public class CNumberUtil implements CNumberList {
 
     /**
-     * 转化为数字
-     *
-     * @param chinese
+     * 将中文数字转化为真正的数字
+     * @param chinese 中文数字
      * @return
      */
     public static <T extends Number> CNumber<T> toNumber(String chinese) {

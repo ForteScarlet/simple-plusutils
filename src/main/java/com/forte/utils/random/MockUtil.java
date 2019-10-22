@@ -130,7 +130,7 @@ import java.util.Random;
  * {@link MockUtil#UUDOUBLE()}<em>获取32位小数，小数为2位</em>
  * </li>
  * </ul>
- * <p><strong>--String character相关</strong></p>
+ * <p><strong>--boolean相关</strong></p>
  * <ul>
  * <li>
  * {@link MockUtil#bool()}<em>返回一个随机布尔值</em>

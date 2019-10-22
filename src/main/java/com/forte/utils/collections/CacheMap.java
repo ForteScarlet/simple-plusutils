@@ -45,39 +45,47 @@ public class CacheMap<T, R> extends AbstractMap<T, R> {
         return put(t, new CacheReturn<>(expireDate, r));
     }
 
-
+    /** 添加一个，指定过期规则 */
     public R put(T t, R r, TemporalAmount amount){
         return put(t, r, LocalDateTime.now().plus(amount));
     }
 
+    /** 存值并指定过期规则 */
     public R put(T t , R r, long amountToAdd, TemporalUnit unit){
         return put(t, r, LocalDateTime.now().plus(amountToAdd, unit));
     }
 
+    /** 过xx纳秒之后过期 */
     public R putPlusNanos(T t , R r, long nanos){
         return put(t, r, LocalDateTime.now().plusNanos(nanos));
     }
 
+    /** 过xx秒之后过期 */
     public R putPlusSeconds(T t , R r, long seconds){
         return put(t, r, LocalDateTime.now().plusSeconds(seconds));
     }
 
+    /** 过xx分钟后过期 */
     public R putPlusMinutes(T t , R r, long minutes){
         return put(t, r, LocalDateTime.now().plusMinutes(minutes));
     }
 
+    /** 过xx小时之后过期 */
     public R putPlusHours(T t , R r, long hours){
         return put(t, r, LocalDateTime.now().plusHours(hours));
     }
 
+    /** 过xx天之后过期 */
     public R putPlusDays(T t , R r, long days){
         return put(t, r, LocalDateTime.now().plusDays(days));
     }
 
+    /** 过xx月之后过期 */
     public R putPlusMonth(T t , R r, long month){
         return put(t, r, LocalDateTime.now().plusMonths(month));
     }
 
+    /** 过xx年之后过期，如果你能等到那时候的话 */
     public R putPlusYear(T t , R r, long year){
         return put(t, r, LocalDateTime.now().plusYears(year));
     }
@@ -131,7 +139,7 @@ public class CacheMap<T, R> extends AbstractMap<T, R> {
     }
 
     /**
-     * 手动触发，检测全部的缓存中是否存在过期值
+     * 手动触发一次检测，检测全部的缓存中是否存在过期值
      */
     public void detect(){
         concurrentHashMap.forEach((k, v) -> {
@@ -141,6 +149,10 @@ public class CacheMap<T, R> extends AbstractMap<T, R> {
         });
     }
 
+    /**
+     * 就是foreach
+     * @param consumer
+     */
     public void cacheForEach(BiConsumer<T, CacheReturn<R>> consumer){
         concurrentHashMap.forEach(consumer);
     }

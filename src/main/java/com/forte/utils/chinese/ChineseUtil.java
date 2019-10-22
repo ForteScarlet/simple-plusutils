@@ -109,26 +109,27 @@ public class ChineseUtil {
      * @return
      */
     public static String getChinese(String encoding) {
-        String str;
+        String str = null;
         String str2 = null;
         int highPos, lowPos;
         Random random = new Random();
         //区码，0xA0打头，从第16区开始，即0xB0=11*16=176,16~55一级汉字，56~87二级汉字
-        highPos = (176 + Math.abs(random.nextInt(71)));
+        highPos = (176 + Math.abs(random.nextInt(39)));
         random = new Random();
         //位码，0xA0打头，范围第1~94列
-        lowPos = 161 + Math.abs(random.nextInt(94));
+        lowPos = 161 + Math.abs(random.nextInt(93));
 
         byte[] bArr = new byte[2];
         bArr[0] = (new Integer(highPos)).byteValue();
         bArr[1] = (new Integer(lowPos)).byteValue();
         try {
             // 区位码组合成汉字
-            str = new String(bArr, "GB2312");
+            str = new String(bArr, "GBK");
             str2 = new String(str.getBytes(), encoding);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+
         return str2;
     }
 

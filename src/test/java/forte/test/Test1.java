@@ -1,10 +1,9 @@
-package com.forte.test;
+package forte.test;
 
 
 import com.forte.utils.reflect.EnumUtils;
-import org.junit.Test;
+import com.forte.utils.time.Stopwatch;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 /**
@@ -17,14 +16,10 @@ public class Test1 {
 
     public static void main(String[] args) throws Exception {
 
-//        String name = "newInstance";
+        String name = "newInstance";
 //
 //        long s = System.currentTimeMillis();
 //
-//        for (int i = 0; i < 100; i++) {
-//            TestEm testEm = EnumUtils.newEnum(TestEm.class, name + i, (Supplier<String>) () -> "我是被之后创建出来的！");
-////            System.out.println(testEm.ordinal());
-//        }
 //
 //        long e = System.currentTimeMillis();
 //
@@ -34,11 +29,18 @@ public class Test1 {
 //        System.out.println("values.length: " + values.length);
 //        System.out.println(values[0]);
 
-        Integer[] a = {0,1,2,3,4,5,6,7,8,9};
-        int i = 5;
-        Integer[] integers = Arrays.stream(a).skip(i).limit(1).toArray(Integer[]::new);
-        System.out.println(Arrays.toString(integers));
 
+        Stopwatch.difference();
+
+        for (int i = 0; i < 1000_0000; i++) {
+            final int index = i;
+            EnumUtils.newEnum(TestEm.class, name + i, (Supplier<String>) () -> "我是被之后创建出来的！索引是" + index + "!");
+//            System.out.println(testEm.ordinal());
+        }
+
+        System.out.println(Stopwatch.difference() + " ms");
+
+        System.out.println("size: " + EnumUtils.values(TestEm.class, TestEm[]::new).length);
 
     }
 }

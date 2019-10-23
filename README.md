@@ -32,6 +32,7 @@
 </dependency>
 ```
 
+码云生成的在线Javadoc文档：[javaDoc](https://apidoc.gitee.com/ForteScarlet/simple-plusutils)
 
 
 

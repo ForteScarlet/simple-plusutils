@@ -13,8 +13,8 @@
 
     <groupId>io.github.ForteScarlet.plusutils</groupId>
     <artifactId>simple-plusutils</artifactId>
-    <!-- 版本号，部署的话要大于1.1 -->
-    <version>1.1</version>
+    <!-- 版本号，部署的话要大于1.2 -->
+    <version>1.2</version>
 
     <name>simple-plusutils</name>
 

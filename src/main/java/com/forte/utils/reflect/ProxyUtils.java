@@ -89,6 +89,7 @@ public class ProxyUtils {
 
     /**
      * 获取一个额外默认值Map
+     * 就只是new了一个HashMap而已。
      * @return
      */
     public static Map<String, BiFunction<Method, Object[], Object>> getProxyDefaultReturnMap(){

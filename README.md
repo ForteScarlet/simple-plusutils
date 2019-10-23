@@ -18,7 +18,25 @@
 
 
 
+不过，假如真的有人想用一用试试的话，我已经将项目上传至了Maven仓库：
 
+> 版本号以仓库中的最新版本号为准，仓库地址：
+>
+> https://mvnrepository.com/artifact/io.github.ForteScarlet.plusutils/simple-plusutils
+
+```xml
+<dependency>
+    <groupId>io.github.ForteScarlet.plusutils</groupId>
+    <artifactId>simple-plusutils</artifactId>
+    <version>1.2</version>
+</dependency>
+```
+
+
+
+
+
+[TOC]
 
 
 
@@ -1095,7 +1113,1314 @@ FieldUtils内部提供了大量的方法用于获取：类的字段、方法，�
 
 
 
-（施工中。
+#### ProxyUtils 动态代理工具类
+
+> `util class`
+
+提供一些方法来使用java自带的动态代理机制来为某些注解、接口类型生成代理对象。其中，提供了方法使得生成的注解代理对象中，方法的返回值即为规定的默认值，或者为指定的没有默认返回值的方法指定默认的返回值。
 
 
+
+当然，本质都是一样的，简单的动态代理而已。
+
+```java
+/**
+     * 从某个类上获取注解的代理对象
+     *
+     * @param annotationType      此枚举的类型
+     * @param type          从某个类身上拿到此枚举
+     * @param invocationHandlerCreator 通过枚举对象和类自身来构建InvocationHandler接口对象
+     */
+    public static <T extends Annotation> T proxy(Class<T> annotationType, Class<?> type, BiFunction<T, Class, InvocationHandler> invocationHandlerCreator);
+
+
+    /**
+     * 从某个字段上获取注解的代理对象
+     *
+     * @param annotationType      此枚举的类型
+     * @param field          从某个字段身上拿到此枚举
+     * @param invocationHandlerCreator 通过枚举对象和类自身来构建InvocationHandler接口对象
+     */
+    public static <T extends Annotation> T proxy(Class<T> annotationType, Field field, BiFunction<T, Field, InvocationHandler> invocationHandlerCreator);
+
+    /**
+     * 从某个字段上获取注解的代理对象
+     *
+     * @param annotationType      此枚举的类型
+     * @param method          从某个方法身上拿到此枚举
+     * @param invocationHandlerCreator 通过枚举对象和类自身来构建InvocationHandler接口对象
+     */
+    public static <T extends Annotation> T proxy(Class<T> annotationType, Method method, BiFunction<T, Method, InvocationHandler> invocationHandlerCreator);
+
+    /**
+     * 从某个字段上获取注解的代理对象
+     *
+     * @param annotationType      此枚举的类型
+     * @param parameter          从某个方法参数身上拿到此枚举
+     * @param invocationHandlerCreator 通过枚举对象和类自身来构建InvocationHandler接口对象
+     */
+    public static <T extends Annotation> T proxy(Class<T> annotationType, Parameter parameter, BiFunction<T, Parameter, InvocationHandler> invocationHandlerCreator);
+
+
+    /**
+     * 为一个接口生成代理对象
+     */
+    public static <T> T proxy(Class<T> interfaceType, ExProxyHandler<Method, Object[], Object> proxyHandler);
+
+    /**
+     * 为一个注解类型生成代理对象
+     * @param annotationType    注解类型
+     * @param proxyHandler      函数，接收方法、参数，返回方法的执行返回值
+     */
+    public static <T extends Annotation> T annotationProxy(Class<T> annotationType, ExProxyHandler<Method, Object[], Object> proxyHandler);
+
+    /**
+     * 获取一个额外默认值Map
+     * 就是个HashMap而已。
+     * @return
+     */
+    public static Map<String, BiFunction<Method, Object[], Object>> getProxyDefaultReturnMap();
+
+    /**
+     * 默认返回注解的默认值，如果没用默认值则查询提供的默认值Map，如果没有则抛出异常
+     * @param annotationType    注解类型
+     * @param defaultReturn     额外的默认值映射，key为方法名，value为函数，接收方法、参数，返回一个执行值
+     */
+    public static <T extends Annotation> T annotationProxyByDefault(Class<T> annotationType, Map<String, BiFunction<Method, Object[], Object>> defaultReturn);
+
+    /**
+     * 默认返回注解的默认值，如果没用默认值则查询提供的默认值Map，如果没有则抛出异常
+     * @param annotationType    注解类型
+     */
+    public static <T extends Annotation> T annotationProxyByDefault(Class<T> annotationType);
+```
+
+
+
+其中，`ExProxyHandler` 是一个函数接口，定义如下：
+
+```java
+    /**
+     *  带着异常处理的BiFunction，用于构建动态代理的参数
+     */
+    @FunctionalInterface
+    public interface ExProxyHandler<T, U, R> {
+        /**
+         * 函数接口
+         * @param t 第一参数
+         * @param u 第二参数
+         * @return  返回值
+         * @throws Throwable 任意异常
+         */
+        R apply(T t, U u) throws Throwable;
+    }
+```
+
+
+
+### 正则工具
+
+> `com.forte.utils.regex`
+
+
+
+#### RegexUtil 正则工具类
+
+> `util class`
+
+
+
+说是正则工具类，实际上就是根据正则切割字符串、截取字符串以及获取`Pattern`和`Matcher`对象而已，以及一个不明意义的从一段SELECT的sql中提取出使用到的表名，而且还不支持JOIN的表连接。
+
+
+
+```java
+/**
+     * 通过[aA]这样的形式实现简单粗暴的忽略大小写。
+     * @param str 正则
+     */
+    public static String toIgnoreCaseRegex(String str);
+
+    /**
+     * 获取正则对应的pattern
+     */
+    public static Pattern getPattern(String regex, int flags);
+
+    public static Pattern getPattern(String regex);
+
+    public static Matcher getMatcher(String source, String regex);
+
+    public static Matcher getMatcher(String source, String regex, int flags);
+
+    public static Matcher getMatcher(String source, Pattern pattern);
+
+    /**
+     * 切割出匹配正则的字符串列表
+     * <code>
+     *     String s = "abaacaaad";
+     *     List<String> list = getSplit(s, "a+");
+     *     list -> [a, aa, aaa]
+     * </code>
+     */
+    public static List<String> getSplit(String source, Pattern pattern);
+
+    /**
+     * 切割出匹配正则的字符串流对象
+     */
+    public static Stream<String> getSplitStream(String source, Pattern pattern);
+
+    /**
+     * 切割出匹配正则的字符串列表
+     */
+    public static List<String> getSplit(String source, String regex);
+
+    /**
+     * 切割出匹配正则的字符串列表
+     */
+    public static Stream<String> getSplitStream(String source, String regex);
+
+    /**
+     * 获取字符串
+     */
+    public static String[] getSplitArray(String source, String regex);
+
+    /**
+     * 获取字符串
+     */
+    public static String[] getMatcherArray(String source, Pattern pattern);
+
+
+    /**
+     * 获取sql查询语句中使用到的表名
+     * 暂时不支持join类型的查询sql
+     * @param selectSql
+     * @return
+     */
+    public static List<String> getTableNameFromSql(String selectSql);
+```
+
+
+
+
+
+### 单例工具
+
+> `com.forte.utils.single`
+
+
+
+#### SingleFactory 单例工厂
+
+> `util class`
+
+
+
+这个单例工厂是我上学的时候刚刚看到了CAS乐观锁概念之后，又正好学到了单例相关的知识之后写出来的东西。现在回来看看其实写的并不怎么样，也基本上不完全是CAS的样子。不过至今尚未优化，毕竟功能也确实是单例工厂，或者说是一个单例仓库更为确切，就先当留着做个纪念吧。而且说是单例工厂，实际上就是用Map保存一下而已，想要真正的实现单例还是要靠自己啊。
+
+
+
+```java
+/** 工厂 */
+    public synchronized static SingleFactory build(Object obj);
+
+    /** 工厂 */
+    public synchronized static SingleFactory build();
+
+    /**
+     * 清空所有保存的数据
+     */
+    public void clear();
+
+     /**
+     * 获取单例，如果没有此类的记录则返回空
+     */
+    public final <T> T get(Class<? extends T> clz);
+
+/**
+     * 获取单例，如果没有则尝试使用反射获取一个新的，将会被记录。
+     * 如果创建失败将会抛出相应的异常
+     * @param <T>
+     * @return
+     */
+    public final <T> T getOrNew(Class<T> clz);
+
+    public final <T> T getOrNew(Class<? extends T> clz , Object... params);
+
+
+    /**
+     * 如果存在则获取，不存在则赋值
+     * @param clz
+     * @param t
+     * @param <T>
+     * @return
+     */
+    public final <T> T getOrSet(Class<? extends T> clz, T t);
+
+    /**
+     * 如果存在则获取，不存在则赋值，不指定class对象
+     * @param t
+     * @param <T>
+     * @return
+     */
+    public final <T> T getOrSet(T t);
+
+
+    /**
+     * 如果存在则获取，不存在则赋值
+     * @param clz
+     * @param supplier
+     * @param <T>
+     * @return
+     */
+    public final <T> T getOrSet(Class<? extends T> clz, Supplier<? extends T> supplier);
+
+    /**
+     * 如果存在则获取，不存在则赋值，不指定class对象
+     * @param supplier
+     * @param <T>
+     * @return
+     */
+    public final <T> T getOrSet(Supplier<? extends T> supplier);
+
+    /**
+     * 重设一个单例
+     * @param clz
+     * @param t
+     * @param <T>
+     */
+    public final <T> void reset(Class<? extends T> clz , T t);
+
+
+    /**
+     * 重设一个单例，不指定class
+     * @param t
+     * @param <T>
+     */
+    public final <T> void reset(T t);
+
+    /**
+     * 重设一个单例并获取单例实例
+     * @param clz
+     * @param t
+     * @param <T>
+     * @return
+     */
+    public final <T> T resetAndGet(Class<? extends T> clz , T t);
+
+
+    /**
+     * 重设一个单例并获取单例实例，不指定class
+     * @param t
+     * @param <T>
+     * @return
+     */
+    public final <T> T resetAndGet(T t);
+
+    /**
+     * 重设一个单例
+     * @param clz
+     * @param supplier
+     * @param <T>
+     */
+    public final <T> void reset(Class<? extends T> clz , Supplier<? extends T> supplier);
+
+
+    /**
+     * 重设一个单例，不指定class
+     * @param supplier
+     * @param <T>
+     */
+    public final <T> void reset(Supplier<? extends T> supplier);
+
+    /**
+     * 重设一个单例并获取单例实例
+     * @param clz
+     * @param supplier
+     * @param <T>
+     * @return
+     */
+    public final <T> T resetAndGet(Class<? extends T> clz , Supplier<? extends T> supplier);
+
+    /**
+     * 重设一个单例并获取单例实例，不指定class
+     * @param supplier
+     * @param <T>
+     * @return
+     */
+    public final <T> T resetAndGet(Supplier<? extends T> supplier);
+
+
+    /**
+     * 记录一个单例
+     * @param clz
+     * @param t
+     * @param <T>
+     */
+    public final <T> void set(Class<? extends T> clz , T t);
+
+    /**
+     * 记录一个单例，不指定class
+     * @param t
+     * @param <T>
+     */
+    public final <T> void set(T t);
+
+    /**
+     * 记录一个单例并获取单例实例
+     * @param clz
+     * @param t
+     * @param <T>
+     * @return
+     */
+    public final <T> T setAndGet(Class<? extends T> clz , T t);
+
+
+    /**
+     * 记录一个单例并获取单例实例，不指定class
+     * @param t
+     * @param <T>
+     * @return
+     */
+    public final <T> T setAndGet(T t);
+
+    /**
+     * 记录一个单例
+     * @param clz
+     * @param supplier
+     * @param <T>
+     */
+    public final <T> void set(Class<? extends T> clz , Supplier<? extends T> supplier);
+
+    /**
+     * 记录一个单例，不指定class
+     * @param supplier
+     * @param <T>
+     */
+    public final <T> void set(Supplier<? extends T> supplier);
+
+    /**
+     * 记录一个单例并获取单例实例
+     * @param clz
+     * @param supplier
+     * @param <T>
+     * @return
+     */
+    public final <T> T setAndGet(Class<? extends T> clz , Supplier<? extends T> supplier);
+
+    /**
+     * 记录一个单例，不指定class
+     * @param supplier
+     * @param <T>
+     * @return
+     */
+    public final <T> T setAndGet(Supplier<? extends T> supplier);
+```
+
+
+
+
+
+### 流工具 **`*`**
+
+> `com.forte.utils.stream`
+
+
+
+这整个工具包下，都是对Java8中的`Stream`流的一个拓展，并提供了一个`ExStream`来作为类似于Stream流一样的入口，提供了大量的更加简化操作的方法。没有什么技术含量，就是简化以下操作而已。
+
+提供的功能有例如：
+
+通过一个迭代器对象创建流对象
+
+```java
+    /**
+     * 一个基于迭代器的流对象
+     * @param iter
+     * @param <T>
+     * @return
+     */
+    public static <T> ExStream<T> byIter(Iterator<T> iter, boolean parallel);
+
+    /**
+     * 基于迭代器的流对象，并使用ExStream封装
+     */
+    public static <T> ExStream<T> byIter(Iterator<T> iter);
+
+```
+
+以及其他一系列的工厂方法，且返回值均为此包下的扩展流对象(`ExStream`) 的相关实现类。
+
+不过这部分当初懒了没写注释..虽然看方法名和返回值能猜个八九不离十
+
+```java
+    public static <T> ExStream<T> of(T t);
+    public static <T> ExStream<T> of(T... ts) ;
+    public static <T> ExStream<T> of(Stream<T> stream) ;
+    public static <T> ExStream<T> of(Collection<T> collection);
+    public static <K, V> ExMapStream<K, V> of(Map<K, V> map);
+    public static <K, V> ExMapStream<K, V> of(Map.Entry<K, V>[] array);
+    public static <T> ExStream<T> iterate(final T seed, final UnaryOperator<T> f);
+    public static <T> ExStream<T> concat(Stream<? extends T> a, Stream<? extends T> b);
+    public static <T> ExStream<T> empty() ;
+    public static <T> ExStream<T> generate(Supplier<T> s) ;
+
+
+    //**************** 整合其他 ****************//
+    //**************** byte ****************//
+
+    public static ByteStream ofByte(byte... values) ;
+    public static ByteStream ofByte(byte value) ;
+    public static ByteStream ofByte(String str);
+    public static ByteStream ofByte(Charset charset, byte... values) ;
+    public static ByteStream ofByte(Charset charset, byte value);
+    public static ByteStream ofByte(String str, Charset charset;
+    public static ByteStream ofByte(String str, String charsetName) throws UnsupportedEncodingException ;
+
+    //**************** char ****************//
+    public static CharStream ofChar(char c);
+    public static CharStream ofChar(char... values);
+    public static CharStream ofChar(String string;
+
+    //**************** String ****************//
+
+    public static CharSequenceStream ofString(String s);
+
+    //**************** 转化 ****************//
+
+    public CharStream mapToChar(ParseTo.ToChar<T> toChar);
+    public ByteStream mapToByte(ParseTo.ToByte<T> toByte);
+    public CharSequenceStream mapToCharSequence(Function<T, ? extends CharSequence> toString);
+    public StringStream mapToString(Function<T, ? extends String> toString);
+```
+
+
+
+除了工厂方法，`ExStream`相对于原版`Stream`增加了一些整合性质的方法：
+
+```java
+//**************** 简化用的方法 ****************//
+//*** 下面这4个用来循环打印控制台的 ***//
+    public void forEachSysOut();
+    public void forEachSysErr();
+    public void forEachPrint(PrintStream printStream);
+    public void forEachPrintln(PrintStream printStream);
+
+
+
+/**
+     * 转为list
+     */
+    public List<T> toList();
+    /**
+     * 转化为set
+     */
+    public Set<T> toSet();
+    /**
+     * 转化为Map
+     */
+    public <K, V> Map<K, V> toMap(Function<? super T, ? extends K> keyMapper,
+                                  Function<? super T, ? extends V> valueMapper);
+    /**
+     * 转化为Map
+     */
+    public <K, V> Map<K, V> toMap(Function<? super T, ? extends K> keyMapper,
+                                  Function<? super T, ? extends V> valueMapper,
+                                  BinaryOperator<V> mergeFunction);
+    /**
+     * 转化为Map，如果出现键冲突则直接使用原版Stream的异常方法
+     */
+    public <K, V, M extends Map<K, V>> Map<K, V> toMap(Function<? super T, ? extends K> keyMapper,
+                                                       Function<? super T, ? extends V> valueMapper,
+                                                       Supplier<M> mapSupplier);
+    /**
+     * 转化为Map
+     */
+    public <K, U, M extends Map<K, U>>
+    M toMap(Function<? super T, ? extends K> keyMapper,
+            Function<? super T, ? extends U> valueMapper,
+            BinaryOperator<U> mergeFunction,
+            Supplier<M> mapSupplier);
+    /**
+     * 转化为MapStream
+     */
+    public <K, V> ExMapStream<K, V> maptoMap(Function<? super T, ? extends K> keyMapper,
+                                                Function<? super T, ? extends V> valueMapper);
+    /**
+     * 转化为MapStream
+     */
+    public <K, V> ExMapStream<K, V> maptoMap(Function<? super T, ? extends K> keyMapper,
+                                                Function<? super T, ? extends V> valueMapper,
+                                                BinaryOperator<V> mergeFunction);
+    /**
+     * 转化为MapStream，如果出现键冲突则直接使用原版Stream的异常方法
+     */
+    public <K, V, M extends Map<K, V>> ExMapStream<K, V> maptoMap(Function<? super T, ? extends K> keyMapper,
+                                                                     Function<? super T, ? extends V> valueMapper,
+                                                                     Supplier<M> mapSupplier);
+    /**
+     * 转化为MapStream
+     */
+    public <K, U, M extends Map<K, U>>
+    ExMapStream<K, U> maptoMap(Function<? super T, ? extends K> keyMapper,
+                                  Function<? super T, ? extends U> valueMapper,
+                                  BinaryOperator<U> mergeFunction,
+                                  Supplier<M> mapSupplier);
+
+    /**
+     * 转化后toList
+     */
+    public <R> List<R> toList(Function<T, R> mapper);
+    /**
+     * 转化后排序后toList
+     */
+    public <R> List<R> toListSorted(Function<T, R> mapper);
+    /**
+     * 排序后转化后tolist
+     */
+    public <R> List<R> sortedToList(Function<T, R> mapper);
+    /**
+     * 转化后排序后toList
+     */
+    public <R> List<R> toListSorted(Function<T, R> mapper, Comparator<R> comparator);
+    /**
+     * 排序后转化后tolist
+     */
+    public <R> List<R> sortedToList(Function<T, R> mapper, Comparator<T> comparator);
+    /**
+     * joining
+     */
+    public String joining(Function<T, String> mapper);
+    /**
+     * joining
+     */
+    public String joining(Function<T, String> mapper, CharSequence delimiter);
+    /**
+     * joining
+     */
+    public String joining(Function<T, String> mapper,
+                          CharSequence delimiter,
+                          CharSequence prefix,
+                          CharSequence suffix);
+    /**
+     * groupBy
+     */
+    public <K> Map<? extends K, List<T>> groupBy(Function<? super T, ? extends K> classifier);
+    /**
+     * groupBy
+     */
+    public <K, A, D> Map<? extends K, D> groupBy(Function<? super T, ? extends K> classifier,
+                                                 Collector<? super T, A, D> downstream);
+    /**
+     * groupBy
+     */
+    public <K, A, D, M extends Map<K, D>> M groupBy(Function<? super T, ? extends K> classifier,
+                                                    Supplier<M> mapFactory,
+                                                    Collector<? super T, A, D> downstream) ;
+    /**
+     * groupByConcurrent
+     */
+    public <K> Map<? extends K, List<T>> groupByConcurrent(Function<? super T, ? extends K> classifier);
+    /**
+     * groupByConcurrent
+     */
+    public <K, A, D> Map<? extends K, D> groupByConcurrent(Function<? super T, ? extends K> classifier,
+                                                           Collector<? super T, A, D> downstream);
+    /**
+     * groupByConcurrent
+     */
+    public <K, A, D, M extends ConcurrentMap<K, D>> M groupByConcurrent(Function<? super T, ? extends K> classifier,
+                                                                        Supplier<M> mapFactory,
+                                                                        Collector<? super T, A, D> downstream);
+    /**
+     * concat
+     */
+    public ExStream<T> concat(Stream<T> concat);
+    public ExStream<T> concat(T t);
+    public ExStream<T> concat(T... t);
+    public ExStream<T> concat(Collection<T> collection);
+
+```
+
+
+
+基本上也就是省略了中间的一步`collect(...)`而已。
+
+除了`ExStream`中提供的这些额外的整合方法以外，还有一些再细一层的实现类：
+
+```
+ByteStream
+CharSequenceStream
+CharStream
+ExMapStream
+FileStream
+StringStream
+```
+
+
+
+这些类中都或多或少的提供了一些针对某种特定类型的Stream的简化操作，例如`StringStream`中有trim() 方法进行去空等等，这里就不赘述了。
+
+
+
+### 线程工具
+
+> `com.forte.utils.thread`
+
+
+
+
+
+#### BaseLocalThreadPool 线程池工厂
+
+> `util class`
+
+
+
+这个线程池工具类也是我在上学的时候，那时候看到了线程池这个东西，并仿照网上的教程写出了一个简单的线程池之后，萌生了写一个线程池工厂的想法。现在看看可能有些不足之处，不过功能依旧是可以实现的。
+
+
+
+线程池工厂所使用的线程池框架是Java中自带的。
+
+```java
+/**
+     * 创建线程池的工厂,无名称，使用默认
+     * @return
+     */
+    public static Executor getThreadPool();
+
+    /**
+     * 创建线程池的工厂
+     *
+     * @param poolName 创建的线程池的名称
+     * @return
+     */
+    public static Executor getThreadPool(String poolName);
+
+    /**
+     * 创建线程池的工厂,无名称，使用默认
+     *
+     * @return
+     */
+    public static Executor getThreadPool(PoolConfig poolConfig);
+
+    /**
+     * 创建线程池的工厂
+     *
+     * @param poolName 创建的线程池的名称
+     * @return
+     */
+    public static Executor getThreadPool(String poolName, PoolConfig poolConfig);
+
+    /**
+     * 清除某指定的线程池
+     *
+     * @param poolName
+     * @return
+     */
+    public static boolean removeThreadPool(String poolName);
+
+    /**
+     * 获取本线程中的线程池
+     *
+     * @return
+     */
+    public static Executor getLocalThreadPool();
+
+    /**
+     * 清除本线程中的线程池
+     */
+    public static boolean removeLocalThreadPool();
+
+    /**
+     * 获取线程工厂
+     *
+     * @return
+     */
+    public static ThreadFactory getFactory();
+
+
+```
+
+
+
+其中，`PoolConfig` 是一个对线程池创建所需要的参数的整合封装类。
+
+```java
+/**
+     * 配置类，提供几个参数
+     */
+    public static class PoolConfig{
+        /**
+         * 核心池的大小
+         */
+        private int corePoolSize = 0;
+
+        /**
+         * 线程池最大线程数，这个参数也是一个非常重要的参数，它表示在线程池中最多能创建多少个线程；
+         */
+        private int maximumPoolSize = 500;
+
+        /**
+         * 表示线程没有任务执行时最多保持多久时间会终止。
+         * 默认情况下，只有当线程池中的线程数大于corePoolSize时，keepAliveTime才会起作用，
+         * 直到线程池中的线程数不大于corePoolSize，即当线程池中的线程数大于corePoolSize时，
+         * 如果一个线程空闲的时间达到keepAliveTime，则会终止，直到线程池中的线程数不超过corePoolSize。
+         * 但是如果调用了allowCoreThreadTimeOut(boolean)方法，在线程池中的线程数不大于corePoolSize时，keepAliveTime参数也会起作用，
+         * 直到线程池中的线程数为0；
+         */
+        private long keepAliveTime = 5;
+
+        /**
+         * unit：参数keepAliveTime的时间单位，有7种取值，在TimeUnit类中有7种静态属性:
+         * TimeUnit.DAYS;              //天
+         * TimeUnit.HOURS;             //小时
+         * TimeUnit.MINUTES;           //分钟
+         * TimeUnit.SECONDS;           //秒
+         * TimeUnit.MILLISECONDS;      //毫秒
+         * TimeUnit.MICROSECONDS;      //微妙
+         * TimeUnit.NANOSECONDS;       //纳秒
+         */
+        private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+
+        /**
+         * 一个阻塞队列，用来存储等待执行的任务，这个参数的选择也很重要，
+         * 会对线程池的运行过程产生重大影响，一般来说，这里的阻塞队列有以下几种选择：
+         * ArrayBlockingQueue;
+         * LinkedBlockingQueue;
+         * SynchronousQueue;
+         * ArrayBlockingQueue和PriorityBlockingQueue使用较少，一般使用LinkedBlockingQueue和Synchronous。
+         * 线程池的排队策略与BlockingQueue有关。
+         */
+        private BlockingQueue<Runnable> workQueue = new SynchronousQueue<>();
+
+        /**
+         * 线程工厂，主要用来创建线程；
+         */
+        private ThreadFactory defaultThreadFactory = Thread::new;
+
+        //**************** 构造 & setter & getter ****************//
+
+        public PoolConfig() {
+        }
+        
+        public PoolConfig(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit timeUnit, BlockingQueue<Runnable> workQueue, ThreadFactory defaultThreadFactory) {
+            this.corePoolSize = corePoolSize;
+            this.maximumPoolSize = maximumPoolSize;
+            this.keepAliveTime = keepAliveTime;
+            this.timeUnit = timeUnit;
+            this.workQueue = workQueue;
+            this.defaultThreadFactory = defaultThreadFactory;
+        }
+
+       // getter & setter ....
+    }
+
+```
+
+
+
+
+
+
+
+
+
+#### DelayUtil 、 ParallelUtil 延迟、循环、同步线程方法
+
+> `util package`
+
+
+
+这玩意儿也是我上学的时候写的..... 我发现我上学的时候是真的闲。
+
+
+
+DelayUtil 中，提供了一系列方法来创建一个延迟一段时间之后执行的方法或者每隔一段时间就执行一次的方法。内部整合上面提到的线程池工厂。
+
+```java
+/**
+	 * 循环执行方法
+	 * 
+	 * @param clazz
+	 *            执行方法的class对象
+	 * @param method
+	 *            要执行的方法
+	 * @param m
+	 *            循环间隔
+	 * @param args
+	 *            方法参数
+	 * @return ForteTimeBean对象，用于终止
+	 */
+	public static <T> DelayBean<T> interval(Class<T> clazz, String method, long m, Object... args);
+
+	/**
+	 * 循环执行方法 - 函数接口
+	 * 
+	 * @param f
+	 *            函数式接口，在当需要循环调用一些并非特定对象的方法的时候可以使用此函数式接口
+	 * @param m
+	 *            延时时长
+	 * @param args
+	 *            方法参数，若没有则不填
+	 * @return 延时对象，用于结束延时
+	 */
+	public static DelayBean interval(DelayFunc f, long m, Object... args);
+
+	/**
+	 * 设置方法延迟执行
+	 * 
+	 * @param object
+	 *            执行方法的对象
+	 * @param method
+	 *            要执行的方法
+	 * @param m
+	 *            循环间隔
+	 * @param args
+	 *            方法参数
+	 * @return ForteTimeBean对象，用于终止
+	 */
+	public static <T> DelayBean<T> timeout(Class<T> object, String method, long m, Object... args);
+
+	/**
+	 * 循环执行方法 - 函数接口
+	 * 
+	 * @param f
+	 *            函数式接口，在当需要循环调用一些并非特定对象的方法的时候可以使用此函数式接口
+	 * @param m
+	 *            延时时长
+	 * @param args
+	 *            方法参数，若没有则不填
+	 * @return 延时对象，用于结束延时
+	 */
+	@SafeVarargs
+	public static DelayBean timeout(DelayFunc f, long m, Object... args);
+
+	/**
+	 * 移除延时执行
+	 * 
+	 * @param timeBean
+	 *            ForteTimeBean对象
+	 */
+	public static void stop(DelayBean timeBean);
+
+	/**
+	 * 移除延时执行 - 延时millis后执行
+	 * 
+	 * @param TimeBean
+	 * @param millis
+	 */
+	public static void stop(DelayBean TimeBean, long millis);
+
+	/**
+	 * 清除全部任务
+	 */
+	public static void clear();
+```
+
+
+
+
+
+ParallelUtil 中提供了一些方法以提供并行方法，即一个大任务中，只有当所有的任务执行完成后才会继续的任务。每个任务都是一个线程。
+
+不过在实际应用中发现，似乎存在bug。不过，如果任务量比较少的话应该还是没问题的。当然，其实相对于用这个方法，还是首先推荐使用Stream流的并行流来的保险。
+
+```java
+
+    /**
+     * 创建一个同步任务
+     * @param taskName
+     * 任务名称
+     * @param singleListener
+     * 任务单独的监听器
+     * @param fs
+     * 任务函数列表
+     * @return
+     */
+    public static Parallel parallel(String taskName , ParallelSingleListener singleListener , ParallelTaskFunc[] fs);
+
+    /**
+     * 创建一个同步任务
+     * @param taskName
+     * 任务名称
+     * @param fs
+     * 任务函数列表
+     * @return
+     */
+    public static Parallel parallel(String taskName , ParallelTaskFunc[] fs);
+
+    /**
+     * 创建一个同步任务
+     * @param singleListener
+     * 此任务单独的监听器
+     * @param fs
+     * 任务函数列表
+     * @return
+     */
+    public static Parallel parallel(ParallelSingleListener singleListener , ParallelTaskFunc[] fs);
+
+    /**
+     * 创建一个同步任务
+     * @param fs
+     * 任务函数列表
+     * @return
+     */
+    public static Parallel parallel(ParallelTaskFunc[] fs);
+
+
+    /**
+     * 获取一个多个同步任务同时进行的同步任务
+     * @param taskName
+     * 任务名称
+     * @param singleListener
+     * 同步任务单独监听器
+     * @param parallels
+     * 同步任务列表
+     * @return
+     */
+    public static Parallel parallelList(String taskName , ParallelSingleListener singleListener , Parallel... parallels);
+
+    /**
+     * 获取一个多个同步任务同时进行的同步任务
+     * @param singleListener
+     * 同步任务单独监听器
+     * @param parallels
+     * 同步任务列表
+     * @return
+     */
+    public static Parallel parallelList(ParallelSingleListener singleListener , Parallel... parallels);
+
+    /**
+     * 获取一个多个同步任务同时进行的同步任务
+     * @param taskName
+     * 任务名称
+     * @param parallels
+     * 同步任务列表
+     * @return
+     */
+    public static Parallel parallelList(String taskName , Parallel... parallels);
+
+    /**
+     * 获取一个多个同步任务同时进行的同步任务
+     * @param parallels
+     * 同步任务列表
+     * @return
+     */
+    public static Parallel parallelList(Parallel... parallels);
+
+
+
+
+    /**
+     * 设置全局监听器
+     * @param listener
+     * 全局监听器的实现对象
+     */
+    public static void setGlobalListener(ParallelGlobalListener listener);
+
+    /**
+     * 设置全局监听器
+     * @param listenerClass
+     * 全局监听器的class对象
+     */
+    public static void setGlobalListener(Class<? extends ParallelGlobalListener> listenerClass);
+```
+
+
+
+
+
+
+
+### 时间工具
+
+> `com.forte.utils.time`
+
+
+
+#### DateDifferenceUtils 时间差工具
+
+> `util class`
+
+
+
+这个是当初从网上嫖的代码自己改的..是计算两个时间中间相差的天、小时、分钟等等的信息。
+
+```java
+ /**
+     * 获取两个时间之间相差的各个时间类型
+     *
+     * @param start  开始时间
+     * @param end    结束时间
+     * @param format 格式化方法
+     * @return
+     */
+    public static DateDiff dateDiff(String start, String end, String format);
+
+/**
+     * 获取两个时间之间相差的各个时间类型
+     *
+     * @param start
+     * @param end
+     * @return
+     */
+    public static DateDiff dateDiff(Date start, Date end) ;
+```
+
+
+
+其中，DateDiff是返回值的封装类，其实现如下：
+
+```java
+/**
+     * 时间差的封装类
+     */
+    public static class DateDiff {
+        private long difference;
+        private long day;
+        private long hour;
+        private long minute;
+        private long second;
+        private long millisecond;
+        
+        // getter & setter 
+        
+    }
+```
+
+
+
+
+
+#### SimpleDateUtils 简易时间工具类
+
+> `com.forte.utils.time`
+
+
+
+这个就不一样了，这是我实习的时候参加的那个项目一边工作一边根据一些烦人的需求写的。然后就顺手收录进来了。
+
+```java
+/**
+     * 获取向前推n个月的每个月的月初日期
+     * 返回值为yyyy-MM-dd
+     * 例如：假如今天是2019-4-30，则lastMonthByDay(3,true)返回值就是：
+     * [
+     * 2019-04-01,
+     * 2019-03-01,
+     * 2019-02-01
+     * ]
+     * @param nums 向前推移多少个月
+     * @param fromNow 是从今天开始还是上个月开始
+     */
+   public static List<LocalDate> beforeMonthByDay(int nums, boolean fromNow);
+
+    /**
+     * 获取向后推n个月的每个月的月初日期
+     * 返回值为yyyy-MM-dd
+     * 例如：假如今天是2019-4-30，则lastMonthByDay(3,true)返回值就是：
+     * [
+     * 2019-04-01,
+     * 2019-03-01,
+     * 2019-02-01
+     * ]
+     * @param nums 向前推移多少个月
+     * @param fromNow 是从今天开始还是上个月开始
+     */
+   public static List<String> beforeMonthByDayToString(int nums, boolean fromNow);
+
+    /**
+     * 获取向前推n个月的每个月的月初日期
+     * 返回值为yyyy-MM
+     * 例如：假如今天是2019-4-30，则lastMonthByMonth(3,true)返回值就是：
+     * [
+     * 2019-04,
+     * 2019-03,
+     * 2019-02
+     * ]
+     * @param nums 向前推移多少个月
+     * @param fromNow 是从今天开始还是上个月开始
+     */
+    public static List<YearMonth> beforeMonthByMonth(int nums, boolean fromNow);
+
+    /**
+     * 获取向后推n个月的每个月的月初日期
+     * 返回值为yyyy-MM
+     * 例如：假如今天是2019-4-30，则lastMonthByMonth(3,true)返回值就是：
+     * [
+     * 2019-04,
+     * 2019-03,
+     * 2019-02
+     * ]
+     * @param nums 向前推移多少个月
+     * @param fromNow 是从今天开始还是上个月开始
+     */
+    public static List<String> beforeMonthByMonthToString(int nums, boolean fromNow);
+
+
+    /**
+     * 向前推n天的数组
+     * 例如，今天是2019-01-10,beforeDays(3, false)
+     * 就是
+     * [2019-01-09, 2019-01-08, 2019-01-07]
+     * @param days      推几天
+     * @param fromNow   是否包括今天
+     * @return
+     */
+    public static List<LocalDate> beforeDays(int days, boolean fromNow);
+
+    /**
+     * 向前推n天的数组
+     * 例如，今天是2019-01-10,beforeDays(3, false)
+     * 就是
+     * [2019-01-09, 2019-01-08, 2019-01-07]
+     * @param days      推几天
+     * @param fromNow   是否包括今天
+     * @return
+     */
+    public static List<String> beforeDaysToString(int days, boolean fromNow);
+
+    /**
+     * 向前推n天的数组
+     * 例如，今天是2019-01-10,beforeDays(3, false)
+     * 就是
+     * [2019-01-09, 2019-01-08, 2019-01-07]
+     *
+     * beforeDaysToString(1, false, String[]::new)
+     * @param days      推几天
+     * @param fromNow   是否包括今天
+     */
+    public static String[] beforeDaysToString(int days, boolean fromNow, IntFunction<String[]> generator);
+
+    /**
+     * 向前推n年，类似于近5年、近6年这样子
+     * @param years
+     * @param fromNow
+     * @return
+     */
+    public static List<Year> beforeYears(int years, boolean fromNow);
+
+    /**
+     * 向前推n年，类似于近5年、近6年这样子
+     */
+    public static List<String> beforeYearsToString(int years, boolean fromNow);
+
+    /**
+     * 将DayOfWeek转化为中文的星期字符串
+     */
+    public static String toChineseWeekDay(DayOfWeek dayOfWeek);
+
+    /**
+     * 将DayOfWeek转化为中文的星期字符串
+     */
+    public static String toChineseWeekDay();
+
+    /**
+     * 复制一个{@link #DAY_OF_WEEK_CHINESE_MAP}字段
+     */
+    public static Map<Integer, String> getDayOfWeekChineseMap();
+
+
+    /**
+     * 获取星期对应中文字符串数组
+     */
+    public static String[] getDayOfWeekChineseStr();
+
+    /** 获取某年所有月份 -yyyy-MM */
+    public static List<YearMonth> getAllYearMonth(Year year);
+
+    /** 获取某年所有月份 - yyyy-MM */
+    public static List<YearMonth> getAllYearMonth(String yearStr);
+
+    /** 获取某年所有月份 - yyyy-MM */
+    public static List<String> getAllYearMonthToString(Year year);
+
+    /** 获取某年所有月份 - yyyy-MM */
+    public static List<String> getAllYearMonthToString(String yearStr);
+
+    /** 获取所有月份数组，01-12 */
+    public static String[] getAllMonth();
+
+    /** 获取所有月份数组，1-12，首部不补零 */
+    public static String[] getAllMonthNo0();
+
+    public static Year instantToYear(Instant instant);
+```
+
+
+
+#### Stopwatch 秒表
+
+> `util class`
+
+
+
+有时候，你想计算方法执行前后的用时，但是又嫌写两遍`System.currentTimeMillis()` 然后在算个减法太麻烦？这个工具类简单的给你封装了一下计时，且自动计算差值。并且计时的前后值在不同的线程中相互独立，(通过`ThreadLocal`控制)
+
+```java
+/**
+     * 记录一个时间
+     */
+    public static long record();
+
+/**
+     * 获取上次计时时间
+     */
+    public static long getLastTime();
+
+    /**
+     * 获取上次计时时间并清除
+     */
+    public static long getLastTimeAndRemove();
+
+    /**
+     * 返回当前与上次的时间差<br>
+     * 如果上次没有时间差，则根据当前计时后的计时时间做自定义处理
+     */
+    public static long difference(Function<Long, Long> orElse);
+
+    /**
+     * 返回当前与上次的时间差<br>
+     * 如果没有计时，则默认返回-1
+     */
+    public static long difference();
+    /**
+     * 返回当前与上次的时间差<br>
+     * 如果没有计时，则抛出异常
+     */
+    public static long differenceOrThrow() ;
+
+```
+
+
+
+一般使用的时候这么用就行了：
+
+```java
+		Stopwatch.difference();
+        run();
+        long d2 = Stopwatch.difference();
+
+        // 这个d2 已经计算完了差值了
+        System.out.println(d2);
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 结尾
+
+没啥东西了，以上目前就是全部了。没有什么中心思想，没有什么核心内容，就是一个乱七八糟工具类大杂烩而已。
 

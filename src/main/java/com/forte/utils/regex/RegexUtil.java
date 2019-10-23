@@ -60,6 +60,10 @@ public class RegexUtil {
     /** 特殊符号 */
     private static final Character csp;
 
+    /**
+     * 通过[aA]这样的形式实现简单粗暴的忽略大小写。
+     * @param str 正则
+     */
     public static String toIgnoreCaseRegex(String str){
         //前一个字符
         Character last1 = null;
@@ -128,6 +132,11 @@ public class RegexUtil {
 
     /**
      * 切割出匹配正则的字符串列表
+     * <code>
+     *     String s = "abaacaaad";
+     *     List<String> list = getSplit(s, "a+");
+     *     list -> [a, aa, aaa]
+     * </code>
      */
     public static List<String> getSplit(String source, Pattern pattern){
         /*
@@ -163,7 +172,12 @@ public class RegexUtil {
     }
 
     /**
-     * 切割出匹配正则的字符串列表
+     * 切割出匹配正则的字符串列表                       <br>
+     * <code>
+     *     String s = "abaacaaad";                  <br>
+     *     List<String> list = getSplit(s, "a+");   <br>
+     *     list -> [a, aa, aaa]                     <br>
+     * </code>
      */
     public static List<String> getSplit(String source, String regex) {
         return getSplit(source, getPattern(regex));

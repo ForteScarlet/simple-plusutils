@@ -158,7 +158,7 @@ public class EnumUtils {
      * @throws NoSuchMethodException
      * @throws IllegalAccessException
      */
-    public static <T extends Enum<T>> T newEnum(Class<T> enumType, String name, Object... args) throws NoSuchMethodException, IllegalAccessException {
+    public static <T extends Enum<T>> T newEnum(Class<T> enumType, String name, Object[] args) throws NoSuchMethodException, IllegalAccessException {
         if(args == null || args.length == 0){
             return newEnum(enumType, name);
         }else{

@@ -28,7 +28,7 @@
 <dependency>
     <groupId>io.github.ForteScarlet.plusutils</groupId>
     <artifactId>simple-plusutils</artifactId>
-    <version>1.2</version>
+    <version>1.3.1</version>
 </dependency>
 ```
 

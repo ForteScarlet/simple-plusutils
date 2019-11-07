@@ -1,7 +1,7 @@
 package com.forte.utils.basis;
 
 import com.forte.utils.coordinate.AbstractCoordinate;
-import com.forte.utils.coordinate.IntAbstractCoordinate;
+import com.forte.utils.coordinate.IntCoordinate;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -154,14 +154,14 @@ public class StringMatchFinder implements Iterator<AbstractCoordinate<Integer>> 
             // 是第一次
             // 获取坐标对象并记录，返回上一次的数据
             if (x >= 0 && y > 0) {
-                forReturn = forNext = new IntAbstractCoordinate(x, y, 0);
+                forReturn = forNext = new IntCoordinate(x, y, 0);
             } else {
                 forReturn = forNext = null;
             }
         } else {
             // 获取坐标对象并记录，返回上一次的数据
             if (x >= 0 && y > 0) {
-                forNext = new IntAbstractCoordinate(x, y, 0);
+                forNext = new IntCoordinate(x, y, 0);
             } else {
                 forNext = null;
             }

@@ -1,4 +1,4 @@
-package com.forte.utils.basis;
+package com.forte.utils.coordinate;
 
 /**
  *

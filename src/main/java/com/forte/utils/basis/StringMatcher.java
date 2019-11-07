@@ -10,7 +10,9 @@ import java.util.stream.Collectors;
  *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
+ * @deprecated 个人水平还是不行，没有达到预期效果
  **/
+@Deprecated
 public class StringMatcher {
 
     private static final StringMatcher EMPTY = new StringMatcher();
@@ -19,6 +21,10 @@ public class StringMatcher {
     private final Map<Character, CharMatchNode> matchMap;
 
     private final Character head;
+
+    public CharMatchNode[] nodes(){
+        return matchMap.values().toArray(new CharMatchNode[0]);
+    }
 
     // 寻找节点
     public CharMatchNode find(char c){

@@ -1,4 +1,4 @@
-package com.forte.utils.basis;
+package com.forte.utils.coordinate;
 
 import java.util.Objects;
 
@@ -30,6 +30,18 @@ public abstract class Coordinate<E extends Number> {
         return z;
     }
 
+    public E x() {
+        return getX();
+    }
+
+    public E y() {
+        return getY();
+    }
+
+    public E z() {
+        return getZ();
+    }
+
     @Override
     public String toString(){
         return "["+x+", "+y+", "+z+"]";
@@ -38,6 +50,7 @@ public abstract class Coordinate<E extends Number> {
     /**
      * 判断是否处于原点
      * 就是x,y,z都是0
+     * @return 是否为原点
      */
     public abstract boolean isOrigin();
 

@@ -7,10 +7,12 @@ import java.util.Map;
 /**
  *
  * 字符匹配节点
+ * 个人水平还是不行，没有达到预期效果
  *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/
+@Deprecated
 public class CharMatchNode {
     /** 当前节点的值 */
     private final char c;
@@ -27,9 +29,15 @@ public class CharMatchNode {
         return nodesMap.get(c);
     }
 
-
     public char getNodeChar(){
         return c;
+    }
+
+    public CharMatchNode[] nodes(){
+        if(nodesMap == null){
+            return null;
+        }
+        return nodesMap.values().toArray(new CharMatchNode[0]);
     }
 
     /**

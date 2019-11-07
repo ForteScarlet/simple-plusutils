@@ -1,7 +1,7 @@
 package com.forte.utils.basis;
 
-import com.forte.utils.coordinate.Coordinate;
-import com.forte.utils.coordinate.IntCoordinate;
+import com.forte.utils.coordinate.AbstractCoordinate;
+import com.forte.utils.coordinate.IntAbstractCoordinate;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
  *
  **/
 @Deprecated
-public class StringMatchFinder implements Iterator<Coordinate<Integer>> {
+public class StringMatchFinder implements Iterator<AbstractCoordinate<Integer>> {
 
     /**
      * 查询索引位，默认初始值为0, 当值小于0的时候代表已经将迭代器迭代完了
@@ -42,7 +42,7 @@ public class StringMatchFinder implements Iterator<Coordinate<Integer>> {
 
     private final StringMatcher matcher;
 
-    private AtomicReference<Coordinate<Integer>> next;
+    private AtomicReference<AbstractCoordinate<Integer>> next;
 
     /**
      * 当前的节点, 初始值为null
@@ -84,12 +84,12 @@ public class StringMatchFinder implements Iterator<Coordinate<Integer>> {
      * 寻找下一个匹配词
      */
     @Override
-    public Coordinate<Integer> next() {
+    public AbstractCoordinate<Integer> next() {
         // 是否是第一次执行此方法
         boolean first = false;
         // 如果匹配索引不是0, 则说明已经有一个值了，则此次为查询下一个值
-        Coordinate<Integer> forReturn;
-        Coordinate<Integer> forNext;
+        AbstractCoordinate<Integer> forReturn;
+        AbstractCoordinate<Integer> forNext;
         first = index.get() == 0;
         if (!first) {
             forReturn = this.next.get();
@@ -154,14 +154,14 @@ public class StringMatchFinder implements Iterator<Coordinate<Integer>> {
             // 是第一次
             // 获取坐标对象并记录，返回上一次的数据
             if (x >= 0 && y > 0) {
-                forReturn = forNext = new IntCoordinate(x, y, 0);
+                forReturn = forNext = new IntAbstractCoordinate(x, y, 0);
             } else {
                 forReturn = forNext = null;
             }
         } else {
             // 获取坐标对象并记录，返回上一次的数据
             if (x >= 0 && y > 0) {
-                forNext = new IntCoordinate(x, y, 0);
+                forNext = new IntAbstractCoordinate(x, y, 0);
             } else {
                 forNext = null;
             }

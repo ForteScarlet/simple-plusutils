@@ -214,16 +214,4 @@ public class VigenereUtils {
     }
 
 
-    // 测试用
-//    public static void main(String[] args) {
-////        System.out.println(decryptTable('e', 'f'));
-//        String text = "ATTACKATDAWN";
-//        String key = "lemon";
-//
-//        String password = encrypt(text, key);
-//        System.out.println("密码：" + text);
-//        System.out.println("加密：" + password);
-//        System.out.println("解密：" + decrypt(password, key));
-//
-//    }
 }

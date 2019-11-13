@@ -1,16 +1,14 @@
-package com.forte.utils.basis;
+package com.forte.utils.security;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * 生成MD5
- * 转移至了{@link com.forte.utils.security.MD5Utils}
- * 此类不再更新（如果有更新的话）
+ * MD5加密工具
+ *
  * @author ForteScarlet <[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/
-@Deprecated
 public class MD5Utils {
 
     public static String toMD5(String inStr)  {

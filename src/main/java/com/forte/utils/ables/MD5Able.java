@@ -1,6 +1,6 @@
 package com.forte.utils.ables;
 
-import com.forte.utils.basis.MD5Utils;
+import com.forte.utils.security.MD5Utils;
 import com.forte.utils.function.ExFunction;
 import com.forte.utils.function.FunctionThrows;
 

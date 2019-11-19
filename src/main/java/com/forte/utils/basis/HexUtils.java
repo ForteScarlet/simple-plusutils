@@ -17,7 +17,7 @@ public class HexUtils {
     /**
      * 大概默认最高为62进制
      */
-    private static final int DEFAULT_MAX = 10 + 26 + 26; //62
+    private static final int DEFAULT_MAX = 10 + 26 + 26;   //62
     /**
      * 最小为2进制
      */
@@ -154,14 +154,17 @@ public class HexUtils {
         long sub = 0;
 
         char c;
+        long d;
+        int p;
+
         int length = hexString.length();
         for (int i = 0; i < length; i++) {
             c = hexString.charAt(i);
             // 将字符转换为对应的数字
             // 保存取出的最低位
-            long d = digStrToNum(c, diy);
+            d = digStrToNum(c, diy);
             // 保存当前位权,从个位开始
-            int p = length - 1 - i;
+            p = length - 1 - i;
             // 0^0 = 1
             if (d != 0) {
                 sub += d * (long) (Math.pow(radix, p));
